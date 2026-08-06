@@ -1,22 +1,34 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { useProjectStore } from '../store/projectStore';
 import { useReviewStore } from '../store/reviewStore';
 import { useAuthStore } from '../store/authStore';
 import { useUIStore } from '../store/uiStore';
 import { useNavigate } from 'react-router-dom';
-import { 
-  FolderGit2, 
-  Code2, 
-  AlertOctagon, 
-  CheckCircle2, 
-  Sparkles, 
-  Plus, 
-  GitBranch, 
+import {
+  FolderGit2,
+  Code2,
+  AlertOctagon,
+  CheckCircle2,
+  Sparkles,
+  Plus,
+  GitBranch,
   History as HistoryIcon,
   ArrowRight,
   TrendingUp,
   ShieldCheck,
-  Zap
+  Zap,
+  Clock,
+  Users,
+  Star,
+  Activity,
+  ChevronRight,
+  MessageSquare,
+  GitPullRequest,
+  Calendar,
+  Award,
+  Flame,
+  Bell,
+  ExternalLink
 } from 'lucide-react';
 import { Button } from '../components/common/Button';
 import { Badge } from '../components/common/Badge';
@@ -27,275 +39,398 @@ export const Dashboard: React.FC = () => {
   const { runReview } = useReviewStore();
   const { setActiveSection } = useUIStore();
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(true);
+  const [greeting, setGreeting] = useState('Good morning');
 
+  // Dynamic greeting based on time
   useEffect(() => {
-    fetchProjects();
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting('Good morning');
+    else if (hour < 17) setGreeting('Good afternoon');
+    else setGreeting('Good evening');
+
+    fetchProjects().finally(() => setIsLoading(false));
   }, [fetchProjects]);
 
+  // Calculate derived stats
+  const stats = useMemo(() => {
+    const totalProjects = projects.length || 4;
+    const avgScore = projects.length ? Math.round(projects.reduce((acc, p) => acc + p.score, 0) / projects.length) : 92;
+    const criticalIssues = projects.reduce((acc, p) => acc + (p.criticalIssues || 0), 0);
+    const fixedIssues = projects.reduce((acc, p) => acc + (p.fixedIssues || 0), 0);
+
+    return { totalProjects, avgScore, criticalIssues, fixedIssues };
+  }, [projects]);
+
+  // Mock recent activity with more realistic data
+  const recentActivity = useMemo(() => [
+    { id: 1, type: 'review', project: 'AI-Code-Review', time: '12 mins ago', status: 'completed', issues: { critical: 0, warning: 1, suggestion: 2 } },
+    { id: 2, type: 'review', project: 'E-Commerce Core API', time: '4 hours ago', status: 'completed', issues: { critical: 1, warning: 2, suggestion: 0 } },
+    { id: 3, type: 'deploy', project: 'Authentication Service', time: '1 day ago', status: 'success', message: 'Deployed to production' },
+    { id: 4, type: 'pr', project: 'Frontend Dashboard', time: '2 days ago', status: 'open', message: 'PR #42: Fix navigation bug' },
+  ], []);
+
+  // Quick stats for the header
+  const quickStats = [
+    { label: 'Projects', value: stats.totalProjects, icon: FolderGit2, color: 'blue' },
+    { label: 'Reviews', value: '248', icon: Code2, color: 'purple' },
+    { label: 'Critical', value: stats.criticalIssues, icon: AlertOctagon, color: 'red' },
+    { label: 'Resolved', value: stats.fixedIssues, icon: CheckCircle2, color: 'emerald' },
+    { label: 'Quality', value: `${stats.avgScore}%`, icon: TrendingUp, color: 'amber' },
+  ];
+
+  const quickActions = [
+    { id: 'review', label: 'Review Code', description: 'Run AI Analysis', shortcut: 'Ctrl+R', icon: Sparkles, color: 'blue' },
+    { id: 'github', label: 'Connect GitHub', description: 'Sync Repositories', shortcut: 'Ctrl+4', icon: GitBranch, color: 'emerald' },
+    { id: 'history', label: 'View History', description: 'Past Audit Logs', shortcut: 'Ctrl+5', icon: HistoryIcon, color: 'purple' },
+    { id: 'projects', label: 'Projects Explorer', description: 'Manage Repos', shortcut: 'Ctrl+2', icon: FolderGit2, color: 'amber' },
+  ];
+
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6 space-y-6">
-      {/* Header Banner */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-5 bg-[#161b22] border border-[#30363d] rounded-lg">
-        <div>
-          <h1 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
-            <span>Good morning, {user?.name || 'Developer'}</span>
-            <Sparkles className="w-5 h-5 text-amber-400" />
-          </h1>
-          <p className="text-xs text-gray-400 mt-1">
-            Review your code, monitor projects, and ship with confidence using automated AI analysis.
-          </p>
-        </div>
+    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6 space-y-6 bg-gradient-to-br from-[#0d1117] via-[#0d1117] to-[#161b22]">
+      {/* Enhanced Welcome Banner */}
+      <div className="relative overflow-hidden p-6 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl">
+        {/* Decorative background elements */}
+        <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
 
-        <div className="flex items-center gap-2.5">
-          <Button
-            variant="primary"
-            icon={<Sparkles className="w-4 h-4" />}
-            onClick={() => {
-              setActiveSection('review');
-              navigate('/review');
-            }}
-          >
-            Start Code Review
-          </Button>
+        <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-3 mb-1">
+              <h1 className="text-2xl font-bold text-white tracking-tight">
+                {greeting}, {user?.name || 'Developer'}
+              </h1>
+              <span className="animate-pulse text-xl">👋</span>
+              <Badge variant="success" size="sm" className="ml-2 bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                <Activity className="w-3 h-3 mr-1" />
+                Active
+              </Badge>
+            </div>
+            <p className="text-sm text-gray-400 max-w-2xl leading-relaxed">
+              Ready to ship quality code? Your codebase is looking great today.
+              <span className="block text-xs text-gray-500 mt-1">
+                <ShieldCheck className="w-3 h-3 inline mr-1 text-emerald-400" />
+                100% vulnerability prevention rate • {stats.avgScore}% average quality score
+              </span>
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3 flex-wrap">
+            <Button
+              variant="primary"
+              size="lg"
+              icon={<Sparkles className="w-4 h-4" />}
+              onClick={() => {
+                setActiveSection('review');
+                navigate('/review');
+              }}
+              className="group relative overflow-hidden"
+            >
+              <span className="relative z-10">Start Code Review</span>
+              <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+              <ChevronRight className="w-4 h-4 ml-1 relative z-10 group-hover:translate-x-0.5 transition-transform" />
+            </Button>
+            <button
+              onClick={() => navigate('/settings')}
+              className="p-2.5 bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] rounded-lg transition-all text-gray-400 hover:text-white"
+              title="Notifications"
+            >
+              <Bell className="w-4 h-4" />
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-[#161b22]"></span>
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Top Statistic Cards */}
+      {/* Enhanced Stats with micro-interactions */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        <div className="p-3.5 bg-[#161b22] border border-[#30363d] rounded-lg">
-          <div className="flex items-center justify-between text-gray-400 text-xs mb-1">
-            <span>Total Projects</span>
-            <FolderGit2 className="w-4 h-4 text-blue-400" />
-          </div>
-          <div className="text-xl font-bold font-mono text-white">{projects.length || 3}</div>
-          <span className="text-[10px] text-gray-500 mt-0.5 block">Active codebases</span>
-        </div>
+        {quickStats.map((stat, idx) => {
+          const Icon = stat.icon;
+          const colorMap = {
+            blue: 'from-blue-500/10 to-blue-600/5 border-blue-500/20 text-blue-400',
+            purple: 'from-purple-500/10 to-purple-600/5 border-purple-500/20 text-purple-400',
+            red: 'from-rose-500/10 to-rose-600/5 border-rose-500/20 text-rose-400',
+            emerald: 'from-emerald-500/10 to-emerald-600/5 border-emerald-500/20 text-emerald-400',
+            amber: 'from-amber-500/10 to-amber-600/5 border-amber-500/20 text-amber-400',
+          };
 
-        <div className="p-3.5 bg-[#161b22] border border-[#30363d] rounded-lg">
-          <div className="flex items-center justify-between text-gray-400 text-xs mb-1">
-            <span>Total Reviews</span>
-            <Code2 className="w-4 h-4 text-purple-400" />
-          </div>
-          <div className="text-xl font-bold font-mono text-white">248</div>
-          <span className="text-[10px] text-emerald-400 mt-0.5 block">+18 this week</span>
-        </div>
-
-        <div className="p-3.5 bg-[#161b22] border border-[#30363d] rounded-lg">
-          <div className="flex items-center justify-between text-gray-400 text-xs mb-1">
-            <span>Critical Issues</span>
-            <AlertOctagon className="w-4 h-4 text-red-400" />
-          </div>
-          <div className="text-xl font-bold font-mono text-red-400">1</div>
-          <span className="text-[10px] text-gray-500 mt-0.5 block">Requires attention</span>
-        </div>
-
-        <div className="p-3.5 bg-[#161b22] border border-[#30363d] rounded-lg">
-          <div className="flex items-center justify-between text-gray-400 text-xs mb-1">
-            <span>Issues Fixed</span>
-            <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-          </div>
-          <div className="text-xl font-bold font-mono text-emerald-400">142</div>
-          <span className="text-[10px] text-gray-500 mt-0.5 block">92% resolution rate</span>
-        </div>
-
-        <div className="p-3.5 bg-[#161b22] border border-[#30363d] rounded-lg col-span-2 md:col-span-1">
-          <div className="flex items-center justify-between text-gray-400 text-xs mb-1">
-            <span>Review Score</span>
-            <TrendingUp className="w-4 h-4 text-amber-400" />
-          </div>
-          <div className="text-xl font-bold font-mono text-blue-400">92%</div>
-          <span className="text-[10px] text-emerald-400 mt-0.5 block">Healthy Quality</span>
-        </div>
+          return (
+            <div
+              key={stat.label}
+              className="group p-4 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-xl hover:border-opacity-50 transition-all duration-300 hover:shadow-lg hover:shadow-opacity-5 hover:-translate-y-0.5"
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">{stat.label}</span>
+                <div className={`p-1.5 rounded-lg bg-gradient-to-br ${colorMap[stat.color]} border`}>
+                  <Icon className="w-3.5 h-3.5" />
+                </div>
+              </div>
+              <div className="text-2xl font-bold font-mono text-white group-hover:text-blue-400 transition-colors">
+                {stat.value}
+              </div>
+              <span className="text-[10px] text-gray-500 mt-1 block opacity-60 group-hover:opacity-100 transition-opacity">
+                {stat.label === 'Critical' ? 'Requires attention' :
+                  stat.label === 'Resolved' ? '92% resolution rate' :
+                    stat.label === 'Quality' ? 'Healthy score' :
+                      stat.label === 'Projects' ? 'Active codebases' :
+                        '+18 this week'}
+              </span>
+            </div>
+          );
+        })}
       </div>
 
-      {/* Quick Action Command Buttons */}
+      {/* Quick Actions with hover effects */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <button
-          onClick={() => {
-            setActiveSection('review');
-            navigate('/review');
-          }}
-          className="p-3.5 bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] rounded-lg text-left transition-all group flex items-center justify-between"
-        >
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-950/80 border border-blue-800/60 rounded text-blue-400">
-              <Sparkles className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="text-xs font-semibold text-gray-200 block group-hover:text-white">Review Code</span>
-              <span className="text-[10px] text-gray-400">Run AI Analysis</span>
-            </div>
-          </div>
-          <span className="text-[10px] font-mono text-gray-500 bg-[#0d1117] px-1.5 py-0.5 rounded border border-[#30363d]">
-            Ctrl+R
-          </span>
-        </button>
+        {quickActions.map((action) => {
+          const Icon = action.icon;
+          const colorMap = {
+            blue: 'bg-blue-950/50 border-blue-800/40 text-blue-400 group-hover:bg-blue-950/70',
+            emerald: 'bg-emerald-950/50 border-emerald-800/40 text-emerald-400 group-hover:bg-emerald-950/70',
+            purple: 'bg-purple-950/50 border-purple-800/40 text-purple-400 group-hover:bg-purple-950/70',
+            amber: 'bg-amber-950/50 border-amber-800/40 text-amber-400 group-hover:bg-amber-950/70',
+          };
 
-        <button
-          onClick={() => {
-            setActiveSection('github');
-            navigate('/github');
-          }}
-          className="p-3.5 bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] rounded-lg text-left transition-all group flex items-center justify-between"
-        >
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-emerald-950/80 border border-emerald-800/60 rounded text-emerald-400">
-              <GitBranch className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="text-xs font-semibold text-gray-200 block group-hover:text-white">Connect GitHub</span>
-              <span className="text-[10px] text-gray-400">Sync Repositories</span>
-            </div>
-          </div>
-          <span className="text-[10px] font-mono text-gray-500 bg-[#0d1117] px-1.5 py-0.5 rounded border border-[#30363d]">
-            Ctrl+4
-          </span>
-        </button>
-
-        <button
-          onClick={() => {
-            setActiveSection('history');
-            navigate('/history');
-          }}
-          className="p-3.5 bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] rounded-lg text-left transition-all group flex items-center justify-between"
-        >
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-purple-950/80 border border-purple-800/60 rounded text-purple-400">
-              <HistoryIcon className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="text-xs font-semibold text-gray-200 block group-hover:text-white">View History</span>
-              <span className="text-[10px] text-gray-400">Past Audit Logs</span>
-            </div>
-          </div>
-          <span className="text-[10px] font-mono text-gray-500 bg-[#0d1117] px-1.5 py-0.5 rounded border border-[#30363d]">
-            Ctrl+5
-          </span>
-        </button>
-
-        <button
-          onClick={() => {
-            setActiveSection('projects');
-            navigate('/projects');
-          }}
-          className="p-3.5 bg-[#161b22] hover:bg-[#21262d] border border-[#30363d] rounded-lg text-left transition-all group flex items-center justify-between"
-        >
-          <div className="flex items-center gap-3">
-            <div className="p-2 bg-amber-950/80 border border-amber-800/60 rounded text-amber-400">
-              <FolderGit2 className="w-4 h-4" />
-            </div>
-            <div>
-              <span className="text-xs font-semibold text-gray-200 block group-hover:text-white">Projects Explorer</span>
-              <span className="text-[10px] text-gray-400">Manage Repos</span>
-            </div>
-          </div>
-          <span className="text-[10px] font-mono text-gray-500 bg-[#0d1117] px-1.5 py-0.5 rounded border border-[#30363d]">
-            Ctrl+2
-          </span>
-        </button>
+          return (
+            <button
+              key={action.id}
+              onClick={() => {
+                setActiveSection(action.id as any);
+                navigate(`/${action.id === 'review' ? 'review' : action.id}`);
+              }}
+              className="group relative p-4 bg-gradient-to-br from-[#161b22] to-[#1c2333] hover:from-[#1c2333] hover:to-[#21262d] border border-[#30363d] hover:border-[#30363d] rounded-xl text-left transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-transparent group-hover:via-white/5 transition-all duration-500"></div>
+              <div className="relative flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2.5 rounded-lg border transition-all duration-300 ${colorMap[action.color]}`}>
+                    <Icon className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <span className="text-sm font-semibold text-gray-200 block group-hover:text-white transition-colors">
+                      {action.label}
+                    </span>
+                    <span className="text-[10px] text-gray-400">{action.description}</span>
+                  </div>
+                </div>
+                <kbd className="hidden sm:block text-[10px] font-mono text-gray-500 bg-[#0d1117] px-2 py-1 rounded border border-[#30363d] group-hover:bg-[#1c2333] transition-colors">
+                  {action.shortcut}
+                </kbd>
+              </div>
+            </button>
+          );
+        })}
       </div>
 
-      {/* Main Grid: Recent Projects & Recent Reviews Timeline */}
+      {/* Main Grid with enhanced cards */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Projects */}
-        <div className="p-4 bg-[#161b22] border border-[#30363d] rounded-lg flex flex-col justify-between">
-          <div>
-            <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#30363d]">
-              <h3 className="text-xs font-semibold text-gray-200 uppercase tracking-wider flex items-center gap-2">
+        {/* Recent Projects with better visual hierarchy */}
+        <div className="p-5 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-xl hover:border-blue-500/20 transition-all duration-300">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-blue-500/10 rounded-lg">
                 <FolderGit2 className="w-4 h-4 text-blue-400" />
-                <span>Recent Projects</span>
+              </div>
+              <h3 className="text-xs font-semibold text-gray-200 uppercase tracking-wider">
+                Recent Projects
               </h3>
-              <button
-                onClick={() => {
-                  setActiveSection('projects');
-                  navigate('/projects');
-                }}
-                className="text-xs text-blue-400 hover:underline flex items-center gap-1 font-medium"
-              >
-                <span>View all</span>
-                <ArrowRight className="w-3 h-3" />
-              </button>
             </div>
+            <button
+              onClick={() => {
+                setActiveSection('projects');
+                navigate('/projects');
+              }}
+              className="text-xs text-gray-400 hover:text-white transition-colors flex items-center gap-1 group"
+            >
+              <span>View all</span>
+              <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+            </button>
+          </div>
 
-            <div className="space-y-2.5">
-              {projects.map((proj) => (
+          <div className="space-y-2.5">
+            {isLoading ? (
+              <div className="space-y-2">
+                {[1, 2, 3].map((i) => (
+                  <div key={i} className="p-3 bg-[#0d1117] border border-[#30363d] rounded-lg animate-pulse">
+                    <div className="h-4 bg-[#21262d] rounded w-3/4 mb-2"></div>
+                    <div className="h-3 bg-[#21262d] rounded w-1/2"></div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              projects.map((proj, idx) => (
                 <div
                   key={proj.id}
                   onClick={() => {
                     selectProject(proj);
                     navigate(`/projects/${proj.id}`);
                   }}
-                  className="p-3 bg-[#0d1117] hover:bg-[#21262d] border border-[#30363d] rounded-md transition-all cursor-pointer flex items-center justify-between"
+                  className="group p-3.5 bg-[#0d1117] hover:bg-[#1c2333] border border-[#30363d] hover:border-[#30363d] rounded-xl transition-all duration-200 cursor-pointer"
                 >
-                  <div className="space-y-0.5">
-                    <h4 className="text-xs font-semibold text-gray-200">{proj.name}</h4>
-                    <p className="text-[10px] text-gray-500 font-mono">{proj.repository}</p>
-                    <div className="flex items-center gap-2 pt-1">
-                      <span className="text-[10px] text-gray-400 bg-[#161b22] px-1.5 py-0.2 rounded font-mono">
-                        {proj.language}
-                      </span>
-                      <span className="text-[10px] text-gray-500">
-                        Branch: {proj.branch}
-                      </span>
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h4 className="text-sm font-semibold text-gray-200 group-hover:text-white transition-colors truncate">
+                          {proj.name}
+                        </h4>
+                        <Badge variant="info" size="sm" className="text-[9px] bg-blue-500/10 text-blue-400 border-blue-500/20">
+                          {proj.language}
+                        </Badge>
+                      </div>
+                      <div className="flex items-center gap-3 text-[10px] text-gray-500">
+                        <span className="flex items-center gap-1">
+                          <GitBranch className="w-3 h-3" />
+                          {proj.branch}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Calendar className="w-3 h-3" />
+                          Updated 2d ago
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right ml-4 flex-shrink-0">
+                      <div className="text-lg font-bold font-mono text-blue-400 group-hover:text-blue-300 transition-colors">
+                        {proj.score}%
+                      </div>
+                      <Badge variant={proj.status === 'Healthy' ? 'success' : 'warning'} size="sm">
+                        {proj.status}
+                      </Badge>
                     </div>
                   </div>
-
-                  <div className="text-right">
-                    <span className="text-sm font-bold font-mono text-blue-400 block">{proj.score}%</span>
-                    <Badge variant={proj.status === 'Healthy' ? 'success' : 'warning'} size="sm">
-                      {proj.status}
-                    </Badge>
-                  </div>
                 </div>
-              ))}
-            </div>
+              ))
+            )}
           </div>
         </div>
 
-        {/* Recent Reviews Timeline */}
-        <div className="p-4 bg-[#161b22] border border-[#30363d] rounded-lg">
-          <div className="flex items-center justify-between pb-3 mb-3 border-b border-[#30363d]">
-            <h3 className="text-xs font-semibold text-gray-200 uppercase tracking-wider flex items-center gap-2">
-              <HistoryIcon className="w-4 h-4 text-purple-400" />
-              <span>Recent AI Review Audits</span>
-            </h3>
+        {/* Recent Activity Timeline with enhanced design */}
+        <div className="p-5 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-xl hover:border-purple-500/20 transition-all duration-300">
+          <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center gap-2">
+              <div className="p-1.5 bg-purple-500/10 rounded-lg">
+                <HistoryIcon className="w-4 h-4 text-purple-400" />
+              </div>
+              <h3 className="text-xs font-semibold text-gray-200 uppercase tracking-wider">
+                Recent Activity
+              </h3>
+            </div>
             <button
               onClick={() => {
                 setActiveSection('history');
                 navigate('/history');
               }}
-              className="text-xs text-blue-400 hover:underline flex items-center gap-1 font-medium"
+              className="text-xs text-gray-400 hover:text-white transition-colors flex items-center gap-1 group"
             >
-              <span>View logs</span>
-              <ArrowRight className="w-3 h-3" />
+              <span>View all</span>
+              <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
             </button>
           </div>
 
-          <div className="space-y-3 font-sans">
-            <div className="p-3 bg-[#0d1117] border border-[#30363d] rounded-md space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-200 font-mono">Review #rev-1092</span>
-                <span className="text-[10px] text-gray-500 font-mono">12 mins ago</span>
-              </div>
-              <p className="text-xs text-gray-400">Project: <span className="text-gray-200 font-medium">AI-Code-Review</span></p>
-              <div className="flex items-center gap-2 text-[10px]">
-                <Badge variant="danger">0 Critical</Badge>
-                <Badge variant="warning">1 Warning</Badge>
-                <Badge variant="info">2 Suggestions</Badge>
-              </div>
-            </div>
+          <div className="space-y-3 max-h-[380px] overflow-y-auto custom-scrollbar pr-1">
+            {recentActivity.map((activity, index) => (
+              <div
+                key={activity.id}
+                className="relative p-3.5 bg-[#0d1117] border border-[#30363d] rounded-xl hover:border-[#30363d] transition-all group"
+              >
+                {/* Timeline connector */}
+                {index < recentActivity.length - 1 && (
+                  <div className="absolute left-5 top-10 w-0.5 h-6 bg-[#30363d]"></div>
+                )}
 
-            <div className="p-3 bg-[#0d1117] border border-[#30363d] rounded-md space-y-1.5">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-200 font-mono">Review #rev-1091</span>
-                <span className="text-[10px] text-gray-500 font-mono">4 hours ago</span>
+                <div className="flex items-start gap-3">
+                  <div className={`p-1.5 rounded-lg flex-shrink-0 ${activity.type === 'review' ? 'bg-blue-500/10 text-blue-400' :
+                      activity.type === 'deploy' ? 'bg-emerald-500/10 text-emerald-400' :
+                        'bg-amber-500/10 text-amber-400'
+                    }`}>
+                    {activity.type === 'review' && <Code2 className="w-3.5 h-3.5" />}
+                    {activity.type === 'deploy' && <ShieldCheck className="w-3.5 h-3.5" />}
+                    {activity.type === 'pr' && <GitPullRequest className="w-3.5 h-3.5" />}
+                  </div>
+
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between gap-2 mb-0.5">
+                      <span className="text-xs font-medium text-gray-200 truncate">
+                        {activity.project}
+                      </span>
+                      <span className="text-[10px] text-gray-500 flex-shrink-0">
+                        {activity.time}
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-gray-400 mb-1.5">
+                      {activity.type === 'review' && 'AI Code Review completed'}
+                      {activity.type === 'deploy' && activity.message}
+                      {activity.type === 'pr' && activity.message}
+                    </p>
+
+                    {activity.type === 'review' && activity.issues && (
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {activity.issues.critical > 0 && (
+                          <Badge variant="danger" size="sm" className="text-[9px] bg-rose-500/10 text-rose-400 border-rose-500/20">
+                            {activity.issues.critical} Critical
+                          </Badge>
+                        )}
+                        {activity.issues.warning > 0 && (
+                          <Badge variant="warning" size="sm" className="text-[9px] bg-amber-500/10 text-amber-400 border-amber-500/20">
+                            {activity.issues.warning} Warning
+                          </Badge>
+                        )}
+                        {activity.issues.suggestion > 0 && (
+                          <Badge variant="info" size="sm" className="text-[9px] bg-blue-500/10 text-blue-400 border-blue-500/20">
+                            {activity.issues.suggestion} Suggestion
+                          </Badge>
+                        )}
+                      </div>
+                    )}
+
+                    {activity.type === 'deploy' && (
+                      <Badge variant="success" size="sm" className="text-[9px] bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
+                        Successful
+                      </Badge>
+                    )}
+
+                    {activity.type === 'pr' && (
+                      <Badge variant="warning" size="sm" className="text-[9px] bg-amber-500/10 text-amber-400 border-amber-500/20">
+                        Open
+                      </Badge>
+                    )}
+                  </div>
+                </div>
               </div>
-              <p className="text-xs text-gray-400">Project: <span className="text-gray-200 font-medium">E-Commerce Core API</span></p>
-              <div className="flex items-center gap-2 text-[10px]">
-                <Badge variant="danger">1 Critical SQLi</Badge>
-                <Badge variant="warning">2 Warnings</Badge>
-              </div>
-            </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Footer with insights and quick links */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
+        <div className="p-3.5 bg-[#161b22] border border-[#30363d] rounded-xl flex items-center gap-3 hover:border-emerald-500/20 transition-colors">
+          <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
+            <ShieldCheck className="w-4 h-4" />
+          </div>
+          <div>
+            <span className="text-xs font-medium text-gray-200 block">Security Score</span>
+            <span className="text-xs text-gray-400">100% • All vulnerabilities prevented</span>
+          </div>
+        </div>
+
+        <div className="p-3.5 bg-[#161b22] border border-[#30363d] rounded-xl flex items-center gap-3 hover:border-blue-500/20 transition-colors">
+          <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
+            <Zap className="w-4 h-4" />
+          </div>
+          <div>
+            <span className="text-xs font-medium text-gray-200 block">Avg. Fix Time</span>
+            <span className="text-xs text-gray-400">1.8 hours • 2x faster than industry avg</span>
+          </div>
+        </div>
+
+        <div className="p-3.5 bg-[#161b22] border border-[#30363d] rounded-xl flex items-center gap-3 hover:border-purple-500/20 transition-colors">
+          <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400">
+            <Award className="w-4 h-4" />
+          </div>
+          <div>
+            <span className="text-xs font-medium text-gray-200 block">Achievement Unlocked</span>
+            <span className="text-xs text-gray-400">50+ reviews • Quality Champion 🏆</span>
           </div>
         </div>
       </div>

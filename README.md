@@ -105,8 +105,8 @@ docker run -p 80:80 ai-code-review-frontend
 - `GET /api/projects` – list user projects
 - `POST /api/review/analyze` – run AI code review
 - `GET /api/history` – review history
-- `POST /api/github/connect` – connect GitHub account
-- `GET /api/github/repositories` – list repositories
+- `POST /api/github/connect` – connecting with  GitHub account
+- `GET /api/github/repositories` – list repositories(show how much repository is present in you github
 
 ## Development Notes
 

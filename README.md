@@ -98,7 +98,7 @@ docker run -p 80:80 ai-code-review-frontend
 - `POST /api/auth/verify-otp` – verify registration OTP
 - `POST /api/auth/resend-otp` – resend verification OTP
 - `POST /api/auth/login` – login with email/password
-- `POST /api/auth/login-otp` – request login OTP
+- `POST /api/auth/login-otp` – route for login email otp verification
 - `POST /api/auth/verify-login-otp` – verify login OTP
 - `GET /api/auth/me` – get current user
 - `POST /api/projects` – create project

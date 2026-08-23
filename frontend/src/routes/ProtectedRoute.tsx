@@ -9,7 +9,11 @@ export const ProtectedRoute: React.FC = () => {
     checkAuth();
   }, [checkAuth]);
 
-  if (!isAuthenticated && !loading) {
+  if (loading) {
+    return null;
+  }
+
+  if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
   }
 

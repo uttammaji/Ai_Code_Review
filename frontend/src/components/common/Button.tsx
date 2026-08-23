@@ -17,13 +17,13 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center font-medium tracking-wide transition-all focus:outline-none focus:ring-1 focus:ring-[#C5A059] disabled:opacity-50 disabled:cursor-not-allowed rounded select-none text-xs md:text-sm';
+  const baseStyles = 'inline-flex items-center justify-center font-medium tracking-wide transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-[#0d1117] disabled:opacity-50 disabled:cursor-not-allowed rounded select-none text-xs md:text-sm';
 
   const variants = {
-    primary: 'bg-[#C5A059] hover:bg-[#D4AF37] text-[#0A0A0A] font-semibold border border-[#C5A059] shadow-md shadow-[#C5A059]/10',
-    secondary: 'bg-[#141414] hover:bg-[#1a1a1a] text-[#D4CFC9] border border-[rgba(197,160,89,0.25)] hover:border-[#C5A059]',
-    danger: 'bg-red-950/80 hover:bg-red-900/90 text-red-300 border border-red-800/60 shadow-sm',
-    ghost: 'bg-transparent hover:bg-[#141414] text-[#D4CFC9]/80 hover:text-[#C5A059]',
+    primary: 'bg-[#C5A059] hover:bg-[#D4AF37] text-[#0A0A0A] font-semibold border border-[#C5A059] shadow-md shadow-[#C5A059]/10 hover:shadow-[#C5A059]/20',
+    secondary: 'bg-[#161b22] hover:bg-[#1c2333] text-[#D4CFC9] border border-[rgba(197,160,89,0.2)] hover:border-[#C5A059]/60 hover:text-white',
+    danger: 'bg-rose-950/80 hover:bg-rose-900/90 text-rose-300 border border-rose-800/60 hover:border-rose-700/80 shadow-sm',
+    ghost: 'bg-transparent hover:bg-[#161b22] text-[#D4CFC9]/80 hover:text-[#C5A059] hover:border-[#C5A059]/20',
     outline: 'border border-[rgba(197,160,89,0.3)] text-[#C5A059] hover:bg-[#C5A059]/10 hover:border-[#C5A059]'
   };
 

@@ -24,7 +24,11 @@ import {
   LogOut,
   ChevronRight,
   Copy,
-  Check
+  Check,
+  Fingerprint,
+  BadgeCheck,
+  TrendingUp,
+  Target
 } from 'lucide-react';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
@@ -80,9 +84,9 @@ export const Profile: React.FC = () => {
   ];
 
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6 space-y-6 bg-gradient-to-br from-[#0d1117] via-[#0d1117] to-[#161b22]">
+    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6 space-y-6 bg-[#0d1117]">
       {/* Header */}
-      <div className="relative overflow-hidden p-6 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl">
+      <div className="relative overflow-hidden p-6 bg-[#161b22] border border-[#30363d] rounded-2xl">
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
 
@@ -106,7 +110,7 @@ export const Profile: React.FC = () => {
             variant="secondary"
             size="sm"
             icon={<Settings className="w-4 h-4" />}
-            onClick={() => {/* Navigate to settings */ }}
+            onClick={() => {/* Navigate to settings */}}
             className="bg-[#21262d] hover:bg-[#30363d] border-[#30363d]"
           >
             Account Settings
@@ -118,7 +122,7 @@ export const Profile: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Column - Profile Info */}
         <div className="lg:col-span-1">
-          <div className="p-6 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl hover:border-opacity-50 transition-all">
+          <div className="p-6 bg-[#161b22] border border-[#30363d] rounded-2xl hover:border-opacity-50 transition-all">
             <div className="flex flex-col items-center text-center">
               {/* Avatar with online status */}
               <div className="relative">
@@ -129,7 +133,7 @@ export const Profile: React.FC = () => {
                     userData.name.split(' ').map(n => n[0]).join('')
                   )}
                 </div>
-                <div className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 rounded-full ring-2 ring-[#161b22] animate-pulse"></div>
+                <div className="absolute bottom-1 right-1 w-4 h-4 bg-emerald-500 rounded-full ring-2 ring-[#161b22]"></div>
               </div>
 
               <div className="mt-4">
@@ -215,7 +219,7 @@ export const Profile: React.FC = () => {
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-gray-400">Authentication</span>
                   <span className="text-gray-200 flex items-center gap-1">
-                    <Key className="w-3.5 h-3.5 text-blue-400" />
+                    <Fingerprint className="w-3.5 h-3.5 text-blue-400" />
                     Email OTP
                   </span>
                 </div>
@@ -224,7 +228,7 @@ export const Profile: React.FC = () => {
           </div>
 
           {/* Security Badges */}
-          <div className="mt-4 p-4 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl">
+          <div className="mt-4 p-4 bg-[#161b22] border border-[#30363d] rounded-2xl">
             <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-2">
               <Lock className="w-3.5 h-3.5" />
               Security Status
@@ -270,7 +274,7 @@ export const Profile: React.FC = () => {
                 purple: 'from-purple-500/10 to-purple-600/5 border-purple-500/20 text-purple-400'
               };
               return (
-                <div key={idx} className="p-4 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-xl hover:border-opacity-50 transition-all hover:-translate-y-0.5">
+                <div key={idx} className="p-4 bg-[#161b22] border border-[#30363d] rounded-xl hover:border-opacity-50 transition-all hover:-translate-y-0.5">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-[10px] font-medium text-gray-400 uppercase tracking-wider">{stat.label}</span>
                     <div className={`p-1.5 rounded-lg bg-gradient-to-br ${colorMap[stat.color as keyof typeof colorMap]} border`}>
@@ -284,7 +288,7 @@ export const Profile: React.FC = () => {
           </div>
 
           {/* Recent Activity */}
-          <div className="p-6 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl">
+          <div className="p-6 bg-[#161b22] border border-[#30363d] rounded-2xl">
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-2">
                 <History className="w-3.5 h-3.5" />
@@ -330,31 +334,31 @@ export const Profile: React.FC = () => {
 
           {/* Quick Stats Bar */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-            <div className="p-3 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-xl flex items-center gap-3 hover:border-emerald-500/20 transition-all">
+            <div className="p-3 bg-[#161b22] border border-[#30363d] rounded-xl flex items-center gap-3 hover:border-emerald-500/20 transition-all">
               <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
-                <Award className="w-4 h-4" />
+                <BadgeCheck className="w-4 h-4" />
               </div>
               <div>
                 <span className="text-xs font-medium text-gray-200 block">Achievement</span>
-                <span className="text-xs text-gray-400">Quality Champion 🏆</span>
+                <span className="text-xs text-gray-400">Quality Champion</span>
               </div>
             </div>
-            <div className="p-3 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-xl flex items-center gap-3 hover:border-blue-500/20 transition-all">
+            <div className="p-3 bg-[#161b22] border border-[#30363d] rounded-xl flex items-center gap-3 hover:border-blue-500/20 transition-all">
               <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
-                <Globe className="w-4 h-4" />
+                <TrendingUp className="w-4 h-4" />
               </div>
               <div>
                 <span className="text-xs font-medium text-gray-200 block">Contributions</span>
                 <span className="text-xs text-gray-400">42 repositories</span>
               </div>
             </div>
-            <div className="p-3 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-xl flex items-center gap-3 hover:border-purple-500/20 transition-all">
+            <div className="p-3 bg-[#161b22] border border-[#30363d] rounded-xl flex items-center gap-3 hover:border-purple-500/20 transition-all">
               <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400">
-                <Smartphone className="w-4 h-4" />
+                <Target className="w-4 h-4" />
               </div>
               <div>
-                <span className="text-xs font-medium text-gray-200 block">Device</span>
-                <span className="text-xs text-gray-400">Chrome · MacOS</span>
+                <span className="text-xs font-medium text-gray-200 block">Success Rate</span>
+                <span className="text-xs text-gray-400">92% resolution rate</span>
               </div>
             </div>
           </div>

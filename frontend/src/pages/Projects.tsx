@@ -10,7 +10,6 @@ import {
   Code2,
   Settings,
   Trash2,
-  Sparkles,
   GitBranch,
   Star,
   GitFork,
@@ -25,7 +24,11 @@ import {
   AlertCircle,
   CheckCircle2,
   Layers,
-  TrendingUp
+  TrendingUp,
+  Grid3x3,
+  Table,
+  FileCode,
+  Folder
 } from 'lucide-react';
 import { Button } from '../components/common/Button';
 import { Badge } from '../components/common/Badge';
@@ -44,7 +47,6 @@ export const Projects: React.FC = () => {
     fetchProjects();
   }, [fetchProjects]);
 
-  // Filter and sort projects
   const filteredProjects = useMemo(() => {
     let filtered = projects.filter(p => {
       const matchesSearch =
@@ -62,7 +64,6 @@ export const Projects: React.FC = () => {
       }
     });
 
-    // Sort
     switch (sortBy) {
       case 'score':
         filtered = filtered.sort((a, b) => b.score - a.score);
@@ -81,7 +82,7 @@ export const Projects: React.FC = () => {
 
   const handleDelete = async (e: React.MouseEvent, id: string, name: string) => {
     e.stopPropagation();
-    if (confirm(`Are you sure you want to delete project "${name}"? This action cannot be undone.`)) {
+    if (window.confirm(`Are you sure you want to delete project "${name}"? This action cannot be undone.`)) {
       await deleteProject(id);
       addNotification({
         title: 'Project Deleted',
@@ -93,7 +94,7 @@ export const Projects: React.FC = () => {
 
   const handleBulkDelete = async () => {
     if (selectedProjects.size === 0) return;
-    if (confirm(`Delete ${selectedProjects.size} selected projects?`)) {
+    if (window.confirm(`Delete ${selectedProjects.size} selected projects?`)) {
       await Promise.all(Array.from(selectedProjects).map(id => deleteProject(id)));
       setSelectedProjects(new Set());
       addNotification({
@@ -155,9 +156,9 @@ export const Projects: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6 space-y-6 bg-gradient-to-br from-[#0d1117] via-[#0d1117] to-[#161b22]">
-      {/* Enhanced Header */}
-      <div className="relative overflow-hidden p-6 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl">
+    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6 space-y-6 bg-[#0d1117]">
+      {/* Header */}
+      <div className="relative overflow-hidden p-6 bg-[#161b22] border border-[#30363d] rounded-2xl">
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
 
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -199,9 +200,9 @@ export const Projects: React.FC = () => {
               title={viewMode === 'table' ? 'Grid view' : 'Table view'}
             >
               {viewMode === 'table' ? (
-                <Layers className="w-4 h-4" />
+                <Grid3x3 className="w-4 h-4" />
               ) : (
-                <FolderGit2 className="w-4 h-4" />
+                <Table className="w-4 h-4" />
               )}
             </button>
           </div>
@@ -248,7 +249,7 @@ export const Projects: React.FC = () => {
         </div>
       </div>
 
-      {/* Enhanced Filters */}
+      {/* Filters */}
       <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
         <div className="flex items-center gap-2 w-full lg:w-auto">
           <div className="relative flex-1 lg:w-80">
@@ -277,14 +278,15 @@ export const Projects: React.FC = () => {
               <button
                 key={filter}
                 onClick={() => setSelectedFilter(filter as any)}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${selectedFilter === filter
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${
+                  selectedFilter === filter
                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-500/20'
                     : 'text-gray-400 hover:text-white hover:bg-[#21262d]'
-                  }`}
+                }`}
               >
                 {filter === 'all' ? 'All' :
-                  filter === 'healthy' ? '✓ Healthy' :
-                    filter === 'warning' ? '⚠ Warning' : '✗ Critical'}
+                  filter === 'healthy' ? 'Healthy' :
+                    filter === 'warning' ? 'Warning' : 'Critical'}
               </button>
             ))}
           </div>
@@ -313,7 +315,7 @@ export const Projects: React.FC = () => {
 
       {/* Bulk actions bar */}
       {selectedProjects.size > 0 && (
-        <div className="flex items-center justify-between p-3 bg-[#161b22] border border-[#30363d] rounded-xl animate-slideDown">
+        <div className="flex items-center justify-between p-3 bg-[#161b22] border border-[#30363d] rounded-xl">
           <span className="text-sm text-gray-300">
             <span className="font-bold text-white">{selectedProjects.size}</span> projects selected
           </span>
@@ -337,7 +339,7 @@ export const Projects: React.FC = () => {
       {/* Projects Display */}
       {viewMode === 'table' ? (
         // Table View
-        <div className="bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl overflow-hidden shadow-2xl shadow-black/20">
+        <div className="bg-[#161b22] border border-[#30363d] rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse text-sm">
               <thead>
@@ -444,7 +446,7 @@ export const Projects: React.FC = () => {
                               className="p-1.5 text-blue-400 hover:text-white hover:bg-[#0d1117] rounded-lg transition-all"
                               title="Run AI Review"
                             >
-                              <Sparkles className="w-3.5 h-3.5" />
+                              <Code2 className="w-3.5 h-3.5" />
                             </button>
                             <button
                               onClick={() => {
@@ -510,7 +512,7 @@ export const Projects: React.FC = () => {
                     selectProject(proj);
                     navigate(`/projects/${proj.id}`);
                   }}
-                  className="group p-5 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl hover:border-opacity-50 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer"
+                  className="group p-5 bg-[#161b22] border border-[#30363d] rounded-2xl hover:border-opacity-50 transition-all duration-300 hover:shadow-xl hover:-translate-y-1 cursor-pointer"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">
@@ -559,7 +561,7 @@ export const Projects: React.FC = () => {
                         className="p-2 text-blue-400 hover:text-white hover:bg-[#0d1117] rounded-lg transition-all"
                         title="Run AI Review"
                       >
-                        <Sparkles className="w-4 h-4" />
+                        <Code2 className="w-4 h-4" />
                       </button>
                       <button
                         onClick={() => {

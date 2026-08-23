@@ -11,8 +11,9 @@ import {
   Clock,
   AlertCircle,
   Key,
-  Sparkles,
-  Lock
+  Lock,
+  Fingerprint,
+  Eye
 } from 'lucide-react';
 import { Badge } from '../components/common/Badge';
 
@@ -20,7 +21,7 @@ export const VerifyOTP: React.FC = () => {
   const { pendingEmail, verifyOTP, login, loading } = useAuthStore();
   const [otpDigits, setOtpDigits] = useState<string[]>(['', '', '', '', '', '']);
   const [error, setError] = useState('');
-  const [timerSeconds, setTimerSeconds] = useState(120); // 2 minutes
+  const [timerSeconds, setTimerSeconds] = useState(120);
   const [resendSuccess, setResendSuccess] = useState(false);
   const [isResending, setIsResending] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
@@ -29,7 +30,6 @@ export const VerifyOTP: React.FC = () => {
 
   const email = pendingEmail || '';
 
-  // Timer countdown
   useEffect(() => {
     if (timerSeconds <= 0) return;
     const interval = setInterval(() => {
@@ -38,7 +38,6 @@ export const VerifyOTP: React.FC = () => {
     return () => clearInterval(interval);
   }, [timerSeconds]);
 
-  // Auto-focus first input on mount
   useEffect(() => {
     if (inputRefs.current[0]) {
       inputRefs.current[0].focus();
@@ -52,7 +51,6 @@ export const VerifyOTP: React.FC = () => {
     newDigits[index] = value.slice(-1);
     setOtpDigits(newDigits);
 
-    // Auto-focus next input
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -95,7 +93,6 @@ export const VerifyOTP: React.FC = () => {
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || err.response?.data?.error || 'Invalid or expired verification code.');
-      // Clear OTP inputs on error
       setOtpDigits(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
     } finally {
@@ -113,7 +110,6 @@ export const VerifyOTP: React.FC = () => {
       setTimerSeconds(120);
       setResendSuccess(true);
       setTimeout(() => setResendSuccess(false), 3000);
-      // Reset OTP inputs
       setOtpDigits(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
     } catch {
@@ -132,12 +128,12 @@ export const VerifyOTP: React.FC = () => {
   const isTimerExpired = timerSeconds <= 0;
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Enhanced Header */}
+    <div className="space-y-6">
+      {/* Header */}
       <div className="relative">
         <div className="flex items-center gap-3 mb-2">
-          <div className="p-3 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
-            <ShieldCheck className="w-6 h-6 text-blue-400" />
+          <div className="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
+            <Fingerprint className="w-6 h-6 text-blue-400" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-white tracking-tight">
@@ -162,7 +158,7 @@ export const VerifyOTP: React.FC = () => {
       </div>
 
       {resendSuccess && (
-        <div className="p-4 bg-emerald-950/40 border border-emerald-800/60 rounded-xl text-sm text-emerald-300 flex items-start gap-2 animate-slideDown">
+        <div className="p-4 bg-emerald-950/40 border border-emerald-800/60 rounded-xl text-sm text-emerald-300 flex items-start gap-2">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0 mt-0.5" />
           <span>New verification code sent to your email!</span>
         </div>
@@ -176,7 +172,7 @@ export const VerifyOTP: React.FC = () => {
           </div>
         )}
 
-        {/* 6 Digit Input Group with enhanced styling */}
+        {/* 6 Digit Input Group */}
         <div>
           <label className="block text-sm font-medium text-gray-300 mb-2 text-center">
             Enter 6-digit verification code
@@ -193,10 +189,11 @@ export const VerifyOTP: React.FC = () => {
                 value={digit}
                 onChange={(e) => handleDigitChange(idx, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(idx, e)}
-                className={`w-14 h-16 text-center text-2xl font-bold font-mono bg-[#161b22] border rounded-xl text-white focus:outline-none focus:ring-2 transition-all ${digit
+                className={`w-14 h-16 text-center text-2xl font-bold font-mono bg-[#161b22] border rounded-xl text-white focus:outline-none focus:ring-2 transition-all ${
+                  digit
                     ? 'border-blue-500/50 bg-blue-500/5'
                     : 'border-[#30363d] focus:border-blue-500'
-                  } ${error ? 'border-rose-500/50' : ''}`}
+                } ${error ? 'border-rose-500/50' : ''}`}
               />
             ))}
           </div>
@@ -217,7 +214,7 @@ export const VerifyOTP: React.FC = () => {
         </Button>
       </form>
 
-      {/* Timer & Resend with enhanced styling */}
+      {/* Timer & Resend */}
       <div className="flex items-center justify-between pt-4 border-t border-[#30363d]">
         <div className="flex items-center gap-2 text-sm">
           <Clock className={`w-4 h-4 ${isTimerExpired ? 'text-rose-400' : 'text-gray-500'}`} />
@@ -232,10 +229,11 @@ export const VerifyOTP: React.FC = () => {
         <button
           onClick={handleResend}
           disabled={!isTimerExpired || isResending}
-          className={`text-sm font-medium transition-all flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${isTimerExpired && !isResending
+          className={`text-sm font-medium transition-all flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${
+            isTimerExpired && !isResending
               ? 'text-blue-400 hover:text-blue-300 hover:bg-blue-500/10'
               : 'text-gray-500 cursor-not-allowed'
-            }`}
+          }`}
         >
           <RefreshCw className={`w-3.5 h-3.5 ${isResending ? 'animate-spin' : ''}`} />
           <span>{isResending ? 'Sending...' : 'Resend code'}</span>

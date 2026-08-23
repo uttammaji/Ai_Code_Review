@@ -5,7 +5,6 @@ import { useUIStore } from '../store/uiStore';
 import { useReviewStore } from '../store/reviewStore';
 import {
   FolderGit2,
-  Sparkles,
   GitBranch,
   ShieldCheck,
   Cpu,
@@ -31,7 +30,12 @@ import {
   ChevronDown,
   Download,
   Play,
-  RefreshCw
+  RefreshCw,
+  File,
+  Folder,
+  Target,
+  Award,
+  Activity
 } from 'lucide-react';
 import { Button } from '../components/common/Button';
 import { Badge } from '../components/common/Badge';
@@ -52,7 +56,7 @@ export const ProjectDetails: React.FC = () => {
     }
   }, [id, fetchProjectById]);
 
-  // Mock file data with more realistic structure
+  // Mock file data
   const fileStructure = useMemo(() => [
     {
       name: 'src', type: 'folder', children: [
@@ -115,9 +119,9 @@ export const ProjectDetails: React.FC = () => {
         <div className={`flex items-center justify-between p-2 hover:bg-[#21262d] rounded-lg transition-colors cursor-pointer group`}>
           <div className="flex items-center gap-2">
             {item.type === 'folder' ? (
-              <FolderGit2 className="w-4 h-4 text-blue-400" />
+              <Folder className="w-4 h-4 text-blue-400" />
             ) : (
-              <FileCode className="w-4 h-4 text-amber-400" />
+              <File className="w-4 h-4 text-amber-400" />
             )}
             <span className="text-sm text-gray-200">{item.name}</span>
             {item.type === 'file' && (
@@ -187,9 +191,9 @@ export const ProjectDetails: React.FC = () => {
   const grade = getScoreGrade(selectedProject.score);
 
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6 space-y-6 bg-gradient-to-br from-[#0d1117] via-[#0d1117] to-[#161b22]">
-      {/* Enhanced Header */}
-      <div className="relative overflow-hidden p-6 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl">
+    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6 space-y-6 bg-[#0d1117]">
+      {/* Header */}
+      <div className="relative overflow-hidden p-6 bg-[#161b22] border border-[#30363d] rounded-2xl">
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
 
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -226,7 +230,7 @@ export const ProjectDetails: React.FC = () => {
             <Button
               variant="primary"
               size="sm"
-              icon={<Sparkles className="w-4 h-4" />}
+              icon={<Code2 className="w-4 h-4" />}
               onClick={() => {
                 setActiveSection('review');
                 navigate('/review');
@@ -261,7 +265,7 @@ export const ProjectDetails: React.FC = () => {
           </div>
           <div className="flex items-center gap-2">
             <div className="p-1.5 bg-purple-500/10 rounded-lg">
-              <Cpu className="w-4 h-4 text-purple-400" />
+              <Target className="w-4 h-4 text-purple-400" />
             </div>
             <div>
               <div className="text-sm font-bold text-white">Excellent</div>
@@ -279,7 +283,7 @@ export const ProjectDetails: React.FC = () => {
           </div>
           <div className="flex items-center gap-2">
             <div className="p-1.5 bg-blue-500/10 rounded-lg">
-              <Clock className="w-4 h-4 text-blue-400" />
+              <Activity className="w-4 h-4 text-blue-400" />
             </div>
             <div>
               <div className="text-sm font-bold text-white">Active</div>
@@ -289,16 +293,17 @@ export const ProjectDetails: React.FC = () => {
         </div>
       </div>
 
-      {/* Enhanced Navigation Tabs */}
+      {/* Navigation Tabs */}
       <div className="flex items-center gap-1 border-b border-[#30363d] text-sm">
         {['overview', 'files', 'history', 'settings'].map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab as any)}
-            className={`px-4 py-2.5 font-medium transition-all relative ${activeTab === tab
+            className={`px-4 py-2.5 font-medium transition-all relative ${
+              activeTab === tab
                 ? 'text-white'
                 : 'text-gray-400 hover:text-gray-200'
-              }`}
+            }`}
           >
             <span className="capitalize">{tab}</span>
             {activeTab === tab && (
@@ -311,9 +316,9 @@ export const ProjectDetails: React.FC = () => {
       {/* Tab Contents */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
-          {/* Enhanced Quality Grades */}
+          {/* Quality Grades */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="group p-5 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-xl hover:border-emerald-500/20 transition-all hover:-translate-y-0.5">
+            <div className="group p-5 bg-[#161b22] border border-[#30363d] rounded-xl hover:border-emerald-500/20 transition-all hover:-translate-y-0.5">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-gray-400 font-medium">Code Quality</span>
                 <TrendingUp className="w-4 h-4 text-emerald-400" />
@@ -327,27 +332,27 @@ export const ProjectDetails: React.FC = () => {
               <span className="text-[10px] text-gray-500 mt-1 block">Score: {selectedProject.score}%</span>
             </div>
 
-            <div className="group p-5 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-xl hover:border-emerald-500/20 transition-all hover:-translate-y-0.5">
+            <div className="group p-5 bg-[#161b22] border border-[#30363d] rounded-xl hover:border-emerald-500/20 transition-all hover:-translate-y-0.5">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-gray-400 font-medium flex items-center gap-1.5">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Security
                 </span>
               </div>
-              <div className="text-2xl font-bold font-mono text-emerald-400">✓ Passed</div>
+              <div className="text-2xl font-bold font-mono text-emerald-400">Passed</div>
               <span className="text-[10px] text-gray-500 mt-1 block">0 Critical CVEs</span>
             </div>
 
-            <div className="group p-5 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-xl hover:border-purple-500/20 transition-all hover:-translate-y-0.5">
+            <div className="group p-5 bg-[#161b22] border border-[#30363d] rounded-xl hover:border-purple-500/20 transition-all hover:-translate-y-0.5">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-gray-400 font-medium flex items-center gap-1.5">
-                  <Cpu className="w-3.5 h-3.5 text-purple-400" /> Maintainability
+                  <Award className="w-3.5 h-3.5 text-purple-400" /> Maintainability
                 </span>
               </div>
               <div className="text-2xl font-bold font-mono text-purple-400">Excellent</div>
               <span className="text-[10px] text-gray-500 mt-1 block">Low coupling</span>
             </div>
 
-            <div className="group p-5 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-xl hover:border-amber-500/20 transition-all hover:-translate-y-0.5">
+            <div className="group p-5 bg-[#161b22] border border-[#30363d] rounded-xl hover:border-amber-500/20 transition-all hover:-translate-y-0.5">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs text-gray-400 font-medium flex items-center gap-1.5">
                   <Zap className="w-3.5 h-3.5 text-amber-400" /> Performance
@@ -358,8 +363,8 @@ export const ProjectDetails: React.FC = () => {
             </div>
           </div>
 
-          {/* Enhanced Details Card */}
-          <div className="p-6 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl">
+          {/* Details Card */}
+          <div className="p-6 bg-[#161b22] border border-[#30363d] rounded-2xl">
             <h3 className="text-sm font-semibold text-gray-200 uppercase tracking-wider flex items-center gap-2 mb-4">
               <Layers className="w-4 h-4 text-blue-400" />
               Repository Metadata
@@ -388,7 +393,7 @@ export const ProjectDetails: React.FC = () => {
           </div>
 
           {/* Issue Distribution */}
-          <div className="p-6 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl">
+          <div className="p-6 bg-[#161b22] border border-[#30363d] rounded-2xl">
             <h3 className="text-sm font-semibold text-gray-200 uppercase tracking-wider flex items-center gap-2 mb-4">
               <AlertCircle className="w-4 h-4 text-amber-400" />
               Issue Distribution
@@ -427,7 +432,7 @@ export const ProjectDetails: React.FC = () => {
       )}
 
       {activeTab === 'files' && (
-        <div className="p-6 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl">
+        <div className="p-6 bg-[#161b22] border border-[#30363d] rounded-2xl">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-gray-200 uppercase tracking-wider flex items-center gap-2">
               <FileCode className="w-4 h-4 text-amber-400" />
@@ -447,7 +452,7 @@ export const ProjectDetails: React.FC = () => {
       )}
 
       {activeTab === 'history' && (
-        <div className="p-6 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl">
+        <div className="p-6 bg-[#161b22] border border-[#30363d] rounded-2xl">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold text-gray-200 uppercase tracking-wider flex items-center gap-2">
               <History className="w-4 h-4 text-purple-400" />
@@ -460,11 +465,12 @@ export const ProjectDetails: React.FC = () => {
               <div key={idx} className="p-4 bg-[#0d1117] border border-[#30363d] rounded-xl hover:border-opacity-50 transition-all">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${review.score >= 90 ? 'bg-emerald-500/10 text-emerald-400' :
-                        review.score >= 80 ? 'bg-blue-500/10 text-blue-400' :
-                          review.score >= 70 ? 'bg-amber-500/10 text-amber-400' :
-                            'bg-rose-500/10 text-rose-400'
-                      }`}>
+                    <div className={`p-2 rounded-lg ${
+                      review.score >= 90 ? 'bg-emerald-500/10 text-emerald-400' :
+                      review.score >= 80 ? 'bg-blue-500/10 text-blue-400' :
+                      review.score >= 70 ? 'bg-amber-500/10 text-amber-400' :
+                      'bg-rose-500/10 text-rose-400'
+                    }`}>
                       <BarChart3 className="w-4 h-4" />
                     </div>
                     <div>
@@ -508,7 +514,7 @@ export const ProjectDetails: React.FC = () => {
       )}
 
       {activeTab === 'settings' && (
-        <div className="p-6 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl">
+        <div className="p-6 bg-[#161b22] border border-[#30363d] rounded-2xl">
           <div className="text-center py-8">
             <div className="inline-flex p-4 bg-[#0d1117] rounded-full border border-[#30363d] mb-4">
               <Settings className="w-8 h-8 text-gray-500" />

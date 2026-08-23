@@ -9,7 +9,6 @@ import {
   Code2,
   AlertOctagon,
   CheckCircle2,
-  Sparkles,
   Plus,
   GitBranch,
   History as HistoryIcon,
@@ -42,7 +41,6 @@ export const Dashboard: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [greeting, setGreeting] = useState('Good morning');
 
-  // Dynamic greeting based on time
   useEffect(() => {
     const hour = new Date().getHours();
     if (hour < 12) setGreeting('Good morning');
@@ -52,7 +50,6 @@ export const Dashboard: React.FC = () => {
     fetchProjects().finally(() => setIsLoading(false));
   }, [fetchProjects]);
 
-  // Calculate derived stats
   const stats = useMemo(() => {
     const totalProjects = projects.length || 4;
     const avgScore = projects.length ? Math.round(projects.reduce((acc, p) => acc + p.score, 0) / projects.length) : 92;
@@ -62,7 +59,6 @@ export const Dashboard: React.FC = () => {
     return { totalProjects, avgScore, criticalIssues, fixedIssues };
   }, [projects]);
 
-  // Mock recent activity with more realistic data
   const recentActivity = useMemo(() => [
     { id: 1, type: 'review', project: 'AI-Code-Review', time: '12 mins ago', status: 'completed', issues: { critical: 0, warning: 1, suggestion: 2 } },
     { id: 2, type: 'review', project: 'E-Commerce Core API', time: '4 hours ago', status: 'completed', issues: { critical: 1, warning: 2, suggestion: 0 } },
@@ -70,7 +66,6 @@ export const Dashboard: React.FC = () => {
     { id: 4, type: 'pr', project: 'Frontend Dashboard', time: '2 days ago', status: 'open', message: 'PR #42: Fix navigation bug' },
   ], []);
 
-  // Quick stats for the header
   const quickStats = [
     { label: 'Projects', value: stats.totalProjects, icon: FolderGit2, color: 'blue' },
     { label: 'Reviews', value: '248', icon: Code2, color: 'purple' },
@@ -80,17 +75,16 @@ export const Dashboard: React.FC = () => {
   ];
 
   const quickActions = [
-    { id: 'review', label: 'Review Code', description: 'Run AI Analysis', shortcut: 'Ctrl+R', icon: Sparkles, color: 'blue' },
+    { id: 'review', label: 'Review Code', description: 'Run AI Analysis', shortcut: 'Ctrl+R', icon: Code2, color: 'blue' },
     { id: 'github', label: 'Connect GitHub', description: 'Sync Repositories', shortcut: 'Ctrl+4', icon: GitBranch, color: 'emerald' },
     { id: 'history', label: 'View History', description: 'Past Audit Logs', shortcut: 'Ctrl+5', icon: HistoryIcon, color: 'purple' },
     { id: 'projects', label: 'Projects Explorer', description: 'Manage Repos', shortcut: 'Ctrl+2', icon: FolderGit2, color: 'amber' },
   ];
 
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6 space-y-6 bg-gradient-to-br from-[#0d1117] via-[#0d1117] to-[#161b22]">
-      {/* Enhanced Welcome Banner */}
-      <div className="relative overflow-hidden p-6 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl">
-        {/* Decorative background elements */}
+    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6 space-y-6 bg-[#0d1117]">
+      {/* Welcome Banner */}
+      <div className="relative overflow-hidden p-6 bg-[#161b22] border border-[#30363d] rounded-2xl">
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-purple-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
 
@@ -100,7 +94,6 @@ export const Dashboard: React.FC = () => {
               <h1 className="text-2xl font-bold text-white tracking-tight">
                 {greeting}, {user?.name || 'Developer'}
               </h1>
-              <span className="animate-pulse text-xl">👋</span>
               <Badge variant="success" size="sm" className="ml-2 bg-emerald-500/10 text-emerald-400 border-emerald-500/20">
                 <Activity className="w-3 h-3 mr-1" />
                 Active
@@ -119,7 +112,7 @@ export const Dashboard: React.FC = () => {
             <Button
               variant="primary"
               size="lg"
-              icon={<Sparkles className="w-4 h-4" />}
+              icon={<Code2 className="w-4 h-4" />}
               onClick={() => {
                 setActiveSection('review');
                 navigate('/review');
@@ -132,7 +125,7 @@ export const Dashboard: React.FC = () => {
             </Button>
             <button
               onClick={() => navigate('/settings')}
-              className="p-2.5 bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] rounded-lg transition-all text-gray-400 hover:text-white"
+              className="relative p-2.5 bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] rounded-lg transition-all text-gray-400 hover:text-white"
               title="Notifications"
             >
               <Bell className="w-4 h-4" />
@@ -142,7 +135,7 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Enhanced Stats with micro-interactions */}
+      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {quickStats.map((stat, idx) => {
           const Icon = stat.icon;
@@ -157,7 +150,7 @@ export const Dashboard: React.FC = () => {
           return (
             <div
               key={stat.label}
-              className="group p-4 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-xl hover:border-opacity-50 transition-all duration-300 hover:shadow-lg hover:shadow-opacity-5 hover:-translate-y-0.5"
+              className="group p-4 bg-[#161b22] border border-[#30363d] rounded-xl hover:border-opacity-50 transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
             >
               <div className="flex items-center justify-between mb-2">
                 <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">{stat.label}</span>
@@ -180,7 +173,7 @@ export const Dashboard: React.FC = () => {
         })}
       </div>
 
-      {/* Quick Actions with hover effects */}
+      {/* Quick Actions */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {quickActions.map((action) => {
           const Icon = action.icon;
@@ -198,7 +191,7 @@ export const Dashboard: React.FC = () => {
                 setActiveSection(action.id as any);
                 navigate(`/${action.id === 'review' ? 'review' : action.id}`);
               }}
-              className="group relative p-4 bg-gradient-to-br from-[#161b22] to-[#1c2333] hover:from-[#1c2333] hover:to-[#21262d] border border-[#30363d] hover:border-[#30363d] rounded-xl text-left transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 overflow-hidden"
+              className="group relative p-4 bg-[#161b22] hover:bg-[#1c2333] border border-[#30363d] hover:border-[#30363d] rounded-xl text-left transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 overflow-hidden"
             >
               <div className="absolute inset-0 bg-gradient-to-r from-transparent via-transparent to-transparent group-hover:via-white/5 transition-all duration-500"></div>
               <div className="relative flex items-center justify-between">
@@ -222,10 +215,10 @@ export const Dashboard: React.FC = () => {
         })}
       </div>
 
-      {/* Main Grid with enhanced cards */}
+      {/* Main Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Recent Projects with better visual hierarchy */}
-        <div className="p-5 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-xl hover:border-blue-500/20 transition-all duration-300">
+        {/* Recent Projects */}
+        <div className="p-5 bg-[#161b22] border border-[#30363d] rounded-xl hover:border-blue-500/20 transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <div className="p-1.5 bg-blue-500/10 rounded-lg">
@@ -303,8 +296,8 @@ export const Dashboard: React.FC = () => {
           </div>
         </div>
 
-        {/* Recent Activity Timeline with enhanced design */}
-        <div className="p-5 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-xl hover:border-purple-500/20 transition-all duration-300">
+        {/* Recent Activity */}
+        <div className="p-5 bg-[#161b22] border border-[#30363d] rounded-xl hover:border-purple-500/20 transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2">
               <div className="p-1.5 bg-purple-500/10 rounded-lg">
@@ -332,7 +325,6 @@ export const Dashboard: React.FC = () => {
                 key={activity.id}
                 className="relative p-3.5 bg-[#0d1117] border border-[#30363d] rounded-xl hover:border-[#30363d] transition-all group"
               >
-                {/* Timeline connector */}
                 {index < recentActivity.length - 1 && (
                   <div className="absolute left-5 top-10 w-0.5 h-6 bg-[#30363d]"></div>
                 )}
@@ -402,7 +394,7 @@ export const Dashboard: React.FC = () => {
         </div>
       </div>
 
-      {/* Footer with insights and quick links */}
+      {/* Footer with insights */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-3 pt-2">
         <div className="p-3.5 bg-[#161b22] border border-[#30363d] rounded-xl flex items-center gap-3 hover:border-emerald-500/20 transition-colors">
           <div className="p-2 bg-emerald-500/10 rounded-lg text-emerald-400">
@@ -430,7 +422,7 @@ export const Dashboard: React.FC = () => {
           </div>
           <div>
             <span className="text-xs font-medium text-gray-200 block">Achievement Unlocked</span>
-            <span className="text-xs text-gray-400">50+ reviews • Quality Champion 🏆</span>
+            <span className="text-xs text-gray-400">50+ reviews • Quality Champion</span>
           </div>
         </div>
       </div>

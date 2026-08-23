@@ -12,11 +12,12 @@ import {
   AlertCircle,
   Eye,
   EyeOff,
-  Sparkles,
   Github,
   Key,
   Users,
-  Star
+  Star,
+  Fingerprint,
+  BadgeCheck
 } from 'lucide-react';
 import { Badge } from '../components/common/Badge';
 
@@ -34,7 +35,6 @@ export const Register: React.FC = () => {
   const { register, loading } = useAuthStore();
   const navigate = useNavigate();
 
-  // Password strength checker
   useEffect(() => {
     if (!password) {
       setPasswordStrength(0);
@@ -117,11 +117,11 @@ export const Register: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
-      {/* Enhanced Header */}
+    <div className="space-y-6">
+      {/* Header */}
       <div className="relative">
         <div className="flex items-center gap-3 mb-1">
-          <div className="p-2 bg-gradient-to-br from-blue-500/10 to-purple-500/10 rounded-xl border border-blue-500/20">
+          <div className="p-2 bg-blue-500/10 rounded-xl border border-blue-500/20">
             <Users className="w-5 h-5 text-blue-400" />
           </div>
           <div>
@@ -131,7 +131,7 @@ export const Register: React.FC = () => {
           </div>
         </div>
         <p className="text-sm text-gray-400 flex items-center gap-2">
-          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+          <Fingerprint className="w-3.5 h-3.5 text-blue-400" />
           Get started with automated AI code reviews and security scans
         </p>
       </div>
@@ -330,12 +330,12 @@ export const Register: React.FC = () => {
         </span>
         <span className="w-px h-3 bg-[#30363d]" />
         <span className="flex items-center gap-1.5">
-          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
+          <BadgeCheck className="w-3.5 h-3.5 text-emerald-400" />
           SOC2 Compliant
         </span>
         <span className="w-px h-3 bg-[#30363d]" />
         <span className="flex items-center gap-1.5">
-          <Key className="w-3.5 h-3.5 text-blue-400" />
+          <Fingerprint className="w-3.5 h-3.5 text-blue-400" />
           OTP Verification
         </span>
       </div>

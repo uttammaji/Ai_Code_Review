@@ -21,7 +21,7 @@ export const Badge: React.FC<BadgeProps> = ({
   if (severity) {
     switch (severity) {
       case 'CRITICAL':
-        colorStyle = 'bg-red-950/80 text-red-300 border-red-800/80 font-semibold animate-pulse';
+        colorStyle = 'bg-red-950/80 text-red-300 border-red-800/80 font-semibold';
         break;
       case 'ERROR':
         colorStyle = 'bg-red-950/50 text-red-400 border-red-900/60 font-medium';

@@ -8,7 +8,6 @@ import {
   GitBranch,
   Star,
   GitFork,
-  Sparkles,
   CheckCircle2,
   Unlink,
   RefreshCw,
@@ -73,13 +72,11 @@ export const GitHubPage: React.FC = () => {
     }
   }, [connected, fetchRepositories]);
 
-  // Get unique languages for filter
   const languages = useMemo(() => {
     const langs = new Set(repositories.map(r => r.language).filter(Boolean));
     return ['ALL', ...Array.from(langs)].sort();
   }, [repositories]);
 
-  // Sort and filter repositories
   const filteredRepos = useMemo(() => {
     let filtered = repositories.filter(r => {
       const matchesSearch = r.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -88,7 +85,6 @@ export const GitHubPage: React.FC = () => {
       return matchesSearch && matchesLang;
     });
 
-    // Sort
     switch (sortBy) {
       case 'stars':
         filtered = filtered.sort((a, b) => b.stars - a.stars);
@@ -105,7 +101,6 @@ export const GitHubPage: React.FC = () => {
     return filtered;
   }, [repositories, searchTerm, selectedLang, sortBy]);
 
-  // Calculate stats
   const stats = useMemo(() => {
     const totalRepos = repositories.length;
     const totalStars = repositories.reduce((acc, r) => acc + r.stars, 0);
@@ -120,12 +115,11 @@ export const GitHubPage: React.FC = () => {
     return { totalRepos, totalStars, totalForks, topLang };
   }, [repositories]);
 
-  // Handle repository open
   const handleOpenRepository = async (repo: any) => {
     try {
       addNotification({
         title: 'GitHub',
-        message: `Opening ${repo.name} in the Explorer…`,
+        message: `Opening ${repo.name} in the Explorer...`,
         type: 'info'
       });
       await loadRepositoryTree(repo);
@@ -140,7 +134,6 @@ export const GitHubPage: React.FC = () => {
     }
   };
 
-  // Clear all filters
   const clearFilters = () => {
     setSearchTerm('');
     setSelectedLang('ALL');
@@ -148,21 +141,20 @@ export const GitHubPage: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6 space-y-6 bg-gradient-to-br from-[#0d1117] via-[#0d1117] to-[#161b22]">
-      {/* Enhanced Header with gradient border */}
-      <div className="relative overflow-hidden p-6 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl">
-        {/* Decorative background */}
+    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6 space-y-6 bg-[#0d1117]">
+      {/* Header */}
+      <div className="relative overflow-hidden p-6 bg-[#161b22] border border-[#30363d] rounded-2xl">
         <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/5 rounded-full blur-3xl translate-y-1/2 -translate-x-1/4"></div>
 
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="relative">
-              <div className="p-3 bg-gradient-to-br from-[#0d1117] to-[#161b22] border border-[#30363d] rounded-xl">
+              <div className="p-3 bg-[#0d1117] border border-[#30363d] rounded-xl">
                 <Github className="w-7 h-7 text-white" />
               </div>
               {connected && (
-                <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full ring-2 ring-[#161b22] animate-pulse"></div>
+                <div className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-500 rounded-full ring-2 ring-[#161b22]"></div>
               )}
             </div>
             <div>
@@ -280,7 +272,7 @@ export const GitHubPage: React.FC = () => {
       </div>
 
       {error && (
-        <div className="relative overflow-hidden rounded-xl border border-rose-800/60 bg-gradient-to-br from-rose-950/40 to-rose-900/20 px-4 py-3 text-xs text-rose-200 animate-slideDown">
+        <div className="relative overflow-hidden rounded-xl border border-rose-800/60 bg-rose-950/40 px-4 py-3 text-xs text-rose-200">
           <div className="flex items-start gap-2">
             <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
             <div>
@@ -299,7 +291,7 @@ export const GitHubPage: React.FC = () => {
 
       {connected ? (
         <div className="space-y-4">
-          {/* Enhanced Controls & Filters */}
+          {/* Controls & Filters */}
           <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
             <div className="flex items-center gap-2 w-full lg:w-auto">
               <div className="relative flex-1 lg:w-80">
@@ -372,7 +364,7 @@ export const GitHubPage: React.FC = () => {
             </div>
           </div>
 
-          {/* Enhanced Repository Cards Grid */}
+          {/* Repository Cards Grid */}
           {filteredRepos.length === 0 ? (
             <div className="text-center py-12 bg-[#161b22] border border-[#30363d] rounded-2xl">
               <div className="flex flex-col items-center gap-3">
@@ -401,7 +393,7 @@ export const GitHubPage: React.FC = () => {
               {filteredRepos.map((repo) => (
                 <div
                   key={repo.id}
-                  className="group p-5 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] hover:border-[#30363d] rounded-2xl transition-all duration-300 hover:shadow-xl hover:shadow-opacity-10 hover:-translate-y-1 flex flex-col"
+                  className="group p-5 bg-[#161b22] border border-[#30363d] hover:border-[#30363d] rounded-2xl transition-all duration-300 hover:shadow-xl hover:-translate-y-1 flex flex-col"
                 >
                   <div className="flex-1">
                     <div className="flex items-start justify-between gap-2 mb-2">
@@ -440,7 +432,7 @@ export const GitHubPage: React.FC = () => {
                     <Button
                       variant="secondary"
                       size="sm"
-                      icon={<Sparkles className="w-3.5 h-3.5 text-blue-400" />}
+                      icon={<Code2 className="w-3.5 h-3.5 text-blue-400" />}
                       onClick={() => handleOpenRepository(repo)}
                       className="hover:bg-blue-500/10 hover:border-blue-500/20 transition-all"
                     >
@@ -458,8 +450,8 @@ export const GitHubPage: React.FC = () => {
           </div>
         </div>
       ) : (
-        // Enhanced Empty State
-        <div className="relative overflow-hidden p-12 text-center bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl">
+        // Empty State
+        <div className="relative overflow-hidden p-12 text-center bg-[#161b22] border border-[#30363d] rounded-2xl">
           <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
 
           <div className="relative space-y-4">

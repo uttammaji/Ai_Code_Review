@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { historyApi } from '../api/history.api';
-import { ReviewRecord } from '../types';
+import { ReviewRecord, IssueSeverity, ReviewFilter, SortOrder } from '../types';
 import { Badge } from '../components/common/Badge';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -8,7 +8,6 @@ import {
   Search,
   Trash2,
   ExternalLink,
-  Sparkles,
   Download,
   Filter,
   Clock,
@@ -23,17 +22,47 @@ import {
   GitBranch,
   Code2,
   Layers,
-  MoreVertical
+  MoreVertical,
+  RefreshCw
 } from 'lucide-react';
 import { useUIStore } from '../store/uiStore';
 
+// Dynamic type definitions
+export type FilterOption = 'all' | 'critical' | 'warning' | 'clean';
+export type SortOption = 'newest' | 'oldest' | 'score' | 'project' | 'language';
+
+export interface HistoryStats {
+  total: number;
+  critical: number;
+  warning: number;
+  clean: number;
+  avgScore: number;
+  languages: string[];
+  projects: string[];
+}
+
+export interface FilterState {
+  search: string;
+  filter: FilterOption;
+  sort: SortOption;
+  dateRange?: {
+    start?: Date;
+    end?: Date;
+  };
+  languages?: string[];
+  projects?: string[];
+}
+
 export const History: React.FC = () => {
   const [historyList, setHistoryList] = useState<ReviewRecord[]>([]);
-  const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
-  const [selectedFilter, setSelectedFilter] = useState<'all' | 'critical' | 'warning' | 'clean'>('all');
-  const [sortOrder, setSortOrder] = useState<'newest' | 'oldest' | 'score'>('newest');
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set());
+  const [filterState, setFilterState] = useState<FilterState>({
+    search: '',
+    filter: 'all',
+    sort: 'newest'
+  });
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
   const { addNotification } = useUIStore();
   const navigate = useNavigate();
 
@@ -47,116 +76,179 @@ export const History: React.FC = () => {
       const res = await historyApi.getReviewHistory();
       setHistoryList(res.history || []);
     } catch {
-      // Fallback with mock data for better UX
-      setHistoryList([
-        {
-          id: 'rev-2024-001',
-          projectName: 'AI-Code-Review',
-          repository: 'github.com/org/ai-code-review',
-          language: 'TypeScript',
-          issues: [
-            { severity: 'WARNING', message: 'Unused variable detected' },
-            { severity: 'SUGGESTION', message: 'Consider using optional chaining' }
-          ],
-          overallScore: 92,
-          createdAt: new Date(Date.now() - 1000 * 60 * 30).toISOString()
-        },
-        {
-          id: 'rev-2024-002',
-          projectName: 'E-Commerce API',
-          repository: 'github.com/org/ecommerce-api',
-          language: 'Python',
-          issues: [
-            { severity: 'CRITICAL', message: 'SQL injection vulnerability in auth endpoint' },
-            { severity: 'WARNING', message: 'Sensitive data exposed in logs' }
-          ],
-          overallScore: 78,
-          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 4).toISOString()
-        },
-        {
-          id: 'rev-2024-003',
-          projectName: 'Frontend Dashboard',
-          repository: 'github.com/org/frontend-dashboard',
-          language: 'JavaScript',
-          issues: [],
-          overallScore: 95,
-          createdAt: new Date(Date.now() - 1000 * 60 * 60 * 24).toISOString()
-        }
-      ] as ReviewRecord[]);
+      // Fallback with mock data
+      setHistoryList(getMockHistoryData());
     } finally {
       setLoading(false);
     }
   };
 
-  // Filter and sort logic
-  const filteredHistory = useMemo(() => {
-    let filtered = historyList.filter(item => {
-      const matchesSearch =
-        item.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.projectName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.language.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        (item.repository || '').toLowerCase().includes(searchTerm.toLowerCase());
+  // Mock data generator for fallback
+  const getMockHistoryData = (): ReviewRecord[] => {
+    const projects = ['AI-Code-Review', 'E-Commerce API', 'Frontend Dashboard', 'Authentication Service', 'Data Pipeline'];
+    const languages = ['TypeScript', 'Python', 'JavaScript', 'Go', 'Java', 'Rust'];
+    const severities: IssueSeverity[] = ['CRITICAL', 'ERROR', 'WARNING', 'SUGGESTION', 'INFO'];
+    
+    return Array.from({ length: 25 }, (_, i) => {
+      const numIssues = Math.floor(Math.random() * 5);
+      const issues = Array.from({ length: numIssues }, () => ({
+        severity: severities[Math.floor(Math.random() * severities.length)],
+        message: `Issue ${Math.random().toString(36).substring(7)}`,
+        line: Math.floor(Math.random() * 100) + 1,
+        file: `src/${['index', 'utils', 'helpers', 'components', 'services'][Math.floor(Math.random() * 5)]}.${['ts', 'js', 'py', 'go'][Math.floor(Math.random() * 4)]}`
+      }));
 
-      if (!matchesSearch) return false;
-
-      const criticals = item.issues.filter(i => i.severity === 'CRITICAL' || i.severity === 'ERROR').length;
-      const warnings = item.issues.filter(i => i.severity === 'WARNING').length;
-      const hasIssues = criticals > 0 || warnings > 0;
-
-      switch (selectedFilter) {
-        case 'critical': return criticals > 0;
-        case 'warning': return warnings > 0 && criticals === 0;
-        case 'clean': return !hasIssues;
-        default: return true;
-      }
+      return {
+        id: `rev-2024-${String(i + 1).padStart(3, '0')}`,
+        projectName: projects[Math.floor(Math.random() * projects.length)],
+        repository: `github.com/org/${projects[Math.floor(Math.random() * projects.length)].toLowerCase().replace(/\s/g, '-')}`,
+        language: languages[Math.floor(Math.random() * languages.length)],
+        issues,
+        overallScore: Math.floor(Math.random() * 40) + 55,
+        createdAt: new Date(Date.now() - Math.random() * 1000 * 60 * 60 * 24 * 30).toISOString(),
+        branch: `feature/${['auth', 'payment', 'dashboard', 'api', 'optimization'][Math.floor(Math.random() * 5)]}`,
+        commitHash: Math.random().toString(36).substring(2, 8)
+      };
     });
+  };
+
+  // Dynamic filter and sort logic
+  const filteredHistory = useMemo(() => {
+    let filtered = [...historyList];
+
+    // Search filter
+    if (filterState.search) {
+      const searchLower = filterState.search.toLowerCase();
+      filtered = filtered.filter(item =>
+        item.id.toLowerCase().includes(searchLower) ||
+        item.projectName.toLowerCase().includes(searchLower) ||
+        item.language.toLowerCase().includes(searchLower) ||
+        (item.repository || '').toLowerCase().includes(searchLower) ||
+        (item.branch || '').toLowerCase().includes(searchLower)
+      );
+    }
+
+    // Severity filter
+    if (filterState.filter !== 'all') {
+      filtered = filtered.filter(item => {
+        const criticals = item.issues.filter(i => i.severity === 'CRITICAL' || i.severity === 'ERROR');
+        const warnings = item.issues.filter(i => i.severity === 'WARNING');
+        const hasIssues = criticals.length > 0 || warnings.length > 0;
+
+        switch (filterState.filter) {
+          case 'critical': return criticals.length > 0;
+          case 'warning': return warnings.length > 0 && criticals.length === 0;
+          case 'clean': return !hasIssues;
+          default: return true;
+        }
+      });
+    }
+
+    // Language filter
+    if (filterState.languages && filterState.languages.length > 0) {
+      filtered = filtered.filter(item => 
+        filterState.languages!.includes(item.language)
+      );
+    }
+
+    // Project filter
+    if (filterState.projects && filterState.projects.length > 0) {
+      filtered = filtered.filter(item => 
+        filterState.projects!.includes(item.projectName)
+      );
+    }
+
+    // Date range filter
+    if (filterState.dateRange?.start) {
+      filtered = filtered.filter(item => 
+        new Date(item.createdAt) >= filterState.dateRange!.start!
+      );
+    }
+    if (filterState.dateRange?.end) {
+      filtered = filtered.filter(item => 
+        new Date(item.createdAt) <= filterState.dateRange!.end!
+      );
+    }
 
     // Sort
-    switch (sortOrder) {
+    switch (filterState.sort) {
       case 'oldest':
-        filtered = filtered.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        filtered.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
         break;
       case 'score':
-        filtered = filtered.sort((a, b) => b.overallScore - a.overallScore);
+        filtered.sort((a, b) => b.overallScore - a.overallScore);
+        break;
+      case 'project':
+        filtered.sort((a, b) => a.projectName.localeCompare(b.projectName));
+        break;
+      case 'language':
+        filtered.sort((a, b) => a.language.localeCompare(b.language));
         break;
       case 'newest':
       default:
-        filtered = filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         break;
     }
 
     return filtered;
-  }, [historyList, searchTerm, selectedFilter, sortOrder]);
+  }, [historyList, filterState]);
 
-  // Stats
-  const stats = useMemo(() => {
+  // Dynamic stats calculation
+  const stats = useMemo<HistoryStats>(() => {
     const total = historyList.length;
     const critical = historyList.filter(item =>
       item.issues.some(i => i.severity === 'CRITICAL' || i.severity === 'ERROR')
+    ).length;
+    const warning = historyList.filter(item =>
+      item.issues.some(i => i.severity === 'WARNING') &&
+      !item.issues.some(i => i.severity === 'CRITICAL' || i.severity === 'ERROR')
     ).length;
     const clean = historyList.filter(item =>
       !item.issues.some(i => i.severity === 'CRITICAL' || i.severity === 'ERROR' || i.severity === 'WARNING')
     ).length;
     const avgScore = total > 0 ? Math.round(historyList.reduce((acc, i) => acc + i.overallScore, 0) / total) : 0;
-    return { total, critical, clean, avgScore };
+    
+    const languages = Array.from(new Set(historyList.map(item => item.language))).sort();
+    const projects = Array.from(new Set(historyList.map(item => item.projectName))).sort();
+
+    return { total, critical, warning, clean, avgScore, languages, projects };
   }, [historyList]);
+
+  // Dynamic filter options
+  const filterOptions = useMemo(() => {
+    const options: Record<FilterOption, { label: string; count: number; icon: React.ReactNode }> = {
+      all: { label: 'All', count: stats.total, icon: null },
+      critical: { label: 'Critical', count: stats.critical, icon: <AlertCircle className="w-3 h-3 text-rose-400" /> },
+      warning: { label: 'Warnings', count: stats.warning, icon: null },
+      clean: { label: 'Clean', count: stats.clean, icon: <CheckCircle2 className="w-3 h-3 text-emerald-400" /> }
+    };
+    return options;
+  }, [stats]);
 
   const handleDelete = async (e: React.MouseEvent, id: string) => {
     e.stopPropagation();
-    if (confirm('Delete this review record?')) {
-      await historyApi.deleteHistory(id);
-      setHistoryList(prev => prev.filter(item => item.id !== id));
-      addNotification({ title: 'History', message: 'Record deleted successfully', type: 'info' });
+    if (window.confirm('Delete this review record?')) {
+      try {
+        await historyApi.deleteHistory(id);
+        setHistoryList(prev => prev.filter(item => item.id !== id));
+        addNotification({ title: 'History', message: 'Record deleted successfully', type: 'info' });
+      } catch {
+        addNotification({ title: 'Error', message: 'Failed to delete record', type: 'error' });
+      }
     }
   };
 
   const handleBulkDelete = async () => {
     if (selectedItems.size === 0) return;
-    if (confirm(`Delete ${selectedItems.size} review records?`)) {
-      await Promise.all(Array.from(selectedItems).map(id => historyApi.deleteHistory(id)));
-      setHistoryList(prev => prev.filter(item => !selectedItems.has(item.id)));
-      setSelectedItems(new Set());
-      addNotification({ title: 'History', message: `${selectedItems.size} records deleted`, type: 'info' });
+    if (window.confirm(`Delete ${selectedItems.size} review records?`)) {
+      try {
+        await Promise.all(Array.from(selectedItems).map(id => historyApi.deleteHistory(id)));
+        setHistoryList(prev => prev.filter(item => !selectedItems.has(item.id)));
+        setSelectedItems(new Set());
+        addNotification({ title: 'History', message: `${selectedItems.size} records deleted`, type: 'info' });
+      } catch {
+        addNotification({ title: 'Error', message: 'Failed to delete records', type: 'error' });
+      }
     }
   };
 
@@ -179,32 +271,45 @@ export const History: React.FC = () => {
   };
 
   const clearFilters = () => {
-    setSearchTerm('');
-    setSelectedFilter('all');
-    setSortOrder('newest');
+    setFilterState({
+      search: '',
+      filter: 'all',
+      sort: 'newest',
+      dateRange: undefined,
+      languages: undefined,
+      projects: undefined
+    });
   };
 
-  const getScoreColor = (score: number) => {
+  const getScoreColor = (score: number): string => {
     if (score >= 90) return 'text-emerald-400';
     if (score >= 70) return 'text-amber-400';
     return 'text-rose-400';
   };
 
-  const getScoreBadge = (score: number) => {
-    if (score >= 90) return { variant: 'success' as const, label: 'Excellent' };
-    if (score >= 70) return { variant: 'warning' as const, label: 'Good' };
-    return { variant: 'danger' as const, label: 'Needs Work' };
+  const getScoreBadge = (score: number): { variant: 'success' | 'warning' | 'danger'; label: string } => {
+    if (score >= 90) return { variant: 'success', label: 'Excellent' };
+    if (score >= 70) return { variant: 'warning', label: 'Good' };
+    return { variant: 'danger', label: 'Needs Work' };
   };
 
+  const hasActiveFilters = filterState.search !== '' || 
+    filterState.filter !== 'all' || 
+    filterState.sort !== 'newest' ||
+    (filterState.languages && filterState.languages.length > 0) ||
+    (filterState.projects && filterState.projects.length > 0) ||
+    filterState.dateRange?.start ||
+    filterState.dateRange?.end;
+
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6 space-y-6 bg-gradient-to-br from-[#0d1117] via-[#0d1117] to-[#161b22]">
-      {/* Enhanced Header */}
-      <div className="relative overflow-hidden p-6 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl">
+    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6 space-y-6 bg-[#0d1117]">
+      {/* Header */}
+      <div className="relative overflow-hidden p-6 bg-[#161b22] border border-[#30363d] rounded-2xl">
         <div className="absolute top-0 right-0 w-64 h-64 bg-purple-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
 
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="p-3 bg-gradient-to-br from-purple-500/10 to-purple-600/5 border border-purple-500/20 rounded-xl">
+            <div className="p-3 bg-purple-500/10 border border-purple-500/20 rounded-xl">
               <HistoryIcon className="w-6 h-6 text-purple-400" />
             </div>
             <div>
@@ -227,10 +332,10 @@ export const History: React.FC = () => {
               className="p-2 bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] rounded-lg transition-all text-gray-400 hover:text-white"
               title="Refresh"
             >
-              <Sparkles className="w-4 h-4" />
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
             <button
-              onClick={() => {/* Export functionality */ }}
+              onClick={() => {/* Export functionality */}}
               className="p-2 bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] rounded-lg transition-all text-gray-400 hover:text-white"
               title="Export"
             >
@@ -239,8 +344,8 @@ export const History: React.FC = () => {
           </div>
         </div>
 
-        {/* Stats row */}
-        <div className="relative mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3 pt-4 border-t border-[#30363d]">
+        {/* Dynamic Stats */}
+        <div className="relative mt-4 grid grid-cols-2 sm:grid-cols-5 gap-3 pt-4 border-t border-[#30363d]">
           <div className="flex items-center gap-2">
             <div className="p-1.5 bg-blue-500/10 rounded-lg">
               <BarChart3 className="w-4 h-4 text-blue-400" />
@@ -260,6 +365,15 @@ export const History: React.FC = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <div className="p-1.5 bg-amber-500/10 rounded-lg">
+              <AlertCircle className="w-4 h-4 text-amber-400" />
+            </div>
+            <div>
+              <div className="text-sm font-bold text-amber-400">{stats.warning}</div>
+              <div className="text-[10px] text-gray-500">Warnings</div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
             <div className="p-1.5 bg-emerald-500/10 rounded-lg">
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
             </div>
@@ -273,7 +387,7 @@ export const History: React.FC = () => {
               <Layers className="w-4 h-4 text-purple-400" />
             </div>
             <div>
-              <div className="text-sm font-bold text-white">{historyList.length}</div>
+              <div className="text-sm font-bold text-white">{stats.total}</div>
               <div className="text-[10px] text-gray-500">Total Reviews</div>
             </div>
           </div>
@@ -281,71 +395,166 @@ export const History: React.FC = () => {
       </div>
 
       {/* Enhanced Filters */}
-      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
-        <div className="flex items-center gap-2 w-full lg:w-auto">
-          <div className="relative flex-1 lg:w-80">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
-            <input
-              type="text"
-              placeholder="Search by ID, project, or language..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#161b22] border border-[#30363d] rounded-xl pl-9 pr-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
-            />
-            {searchTerm && (
+      <div className="flex flex-col gap-3">
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-3">
+          <div className="flex items-center gap-2 w-full lg:w-auto">
+            <div className="relative flex-1 lg:w-80">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-gray-500" />
+              <input
+                type="text"
+                placeholder="Search by ID, project, language..."
+                value={filterState.search}
+                onChange={(e) => setFilterState(prev => ({ ...prev, search: e.target.value }))}
+                className="w-full bg-[#161b22] border border-[#30363d] rounded-xl pl-9 pr-3 py-2 text-sm text-gray-200 placeholder-gray-500 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+              />
+              {filterState.search && (
+                <button
+                  onClick={() => setFilterState(prev => ({ ...prev, search: '' }))}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              )}
+            </div>
+            <button
+              onClick={() => setShowAdvancedFilters(!showAdvancedFilters)}
+              className={`p-2 rounded-xl border transition-all ${showAdvancedFilters ? 'bg-purple-500/10 border-purple-500/30 text-purple-400' : 'bg-[#161b22] border-[#30363d] text-gray-400 hover:text-white'}`}
+            >
+              <Filter className="w-4 h-4" />
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto">
+            <div className="flex items-center gap-1 bg-[#161b22] border border-[#30363d] rounded-lg p-1">
+              {Object.entries(filterOptions).map(([key, option]) => (
+                <button
+                  key={key}
+                  onClick={() => setFilterState(prev => ({ ...prev, filter: key as FilterOption }))}
+                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-1 ${filterState.filter === key
+                      ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/20'
+                      : 'text-gray-400 hover:text-white hover:bg-[#21262d]'
+                    }`}
+                >
+                  {option.icon}
+                  {option.label}
+                  <span className={`text-[9px] ${filterState.filter === key ? 'text-purple-200' : 'text-gray-500'}`}>
+                    ({option.count})
+                  </span>
+                </button>
+              ))}
+            </div>
+
+            <select
+              value={filterState.sort}
+              onChange={(e) => setFilterState(prev => ({ ...prev, sort: e.target.value as SortOption }))}
+              className="bg-[#161b22] border border-[#30363d] rounded-lg px-2.5 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-purple-500"
+            >
+              <option value="newest">Newest</option>
+              <option value="oldest">Oldest</option>
+              <option value="score">Highest Score</option>
+              <option value="project">Project Name</option>
+              <option value="language">Language</option>
+            </select>
+
+            {hasActiveFilters && (
               <button
-                onClick={() => setSearchTerm('')}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-300"
+                onClick={clearFilters}
+                className="text-xs text-gray-400 hover:text-white transition-colors flex items-center gap-1 px-2 py-1"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3 h-3" />
+                Clear
               </button>
             )}
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto">
-          <div className="flex items-center gap-1 bg-[#161b22] border border-[#30363d] rounded-lg p-1">
-            {['all', 'critical', 'warning', 'clean'].map((filter) => (
-              <button
-                key={filter}
-                onClick={() => setSelectedFilter(filter as any)}
-                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all ${selectedFilter === filter
-                    ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/20'
-                    : 'text-gray-400 hover:text-white hover:bg-[#21262d]'
-                  }`}
-              >
-                {filter === 'all' ? 'All' :
-                  filter === 'critical' ? 'Critical' :
-                    filter === 'warning' ? 'Warnings' : 'Clean'}
-              </button>
-            ))}
+        {/* Advanced Filters */}
+        {showAdvancedFilters && (
+          <div className="p-4 bg-[#161b22] border border-[#30363d] rounded-xl grid grid-cols-1 md:grid-cols-3 gap-4 animate-slideDown">
+            <div>
+              <label className="text-xs text-gray-400 font-medium block mb-1.5">Languages</label>
+              <div className="flex flex-wrap gap-1">
+                {stats.languages.map(lang => (
+                  <button
+                    key={lang}
+                    onClick={() => {
+                      const current = filterState.languages || [];
+                      const newLangs = current.includes(lang)
+                        ? current.filter(l => l !== lang)
+                        : [...current, lang];
+                      setFilterState(prev => ({ ...prev, languages: newLangs.length > 0 ? newLangs : undefined }));
+                    }}
+                    className={`px-2 py-0.5 rounded-md text-xs border transition-all ${(filterState.languages || []).includes(lang)
+                        ? 'bg-purple-600 text-white border-purple-500'
+                        : 'bg-[#0d1117] text-gray-400 border-[#30363d] hover:text-white'
+                      }`}
+                  >
+                    {lang}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs text-gray-400 font-medium block mb-1.5">Projects</label>
+              <div className="flex flex-wrap gap-1">
+                {stats.projects.slice(0, 8).map(project => (
+                  <button
+                    key={project}
+                    onClick={() => {
+                      const current = filterState.projects || [];
+                      const newProjects = current.includes(project)
+                        ? current.filter(p => p !== project)
+                        : [...current, project];
+                      setFilterState(prev => ({ ...prev, projects: newProjects.length > 0 ? newProjects : undefined }));
+                    }}
+                    className={`px-2 py-0.5 rounded-md text-xs border transition-all ${(filterState.projects || []).includes(project)
+                        ? 'bg-purple-600 text-white border-purple-500'
+                        : 'bg-[#0d1117] text-gray-400 border-[#30363d] hover:text-white'
+                      }`}
+                  >
+                    {project}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs text-gray-400 font-medium block mb-1.5">Date Range</label>
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={filterState.dateRange?.start?.toISOString().split('T')[0] || ''}
+                  onChange={(e) => {
+                    const date = e.target.value ? new Date(e.target.value) : undefined;
+                    setFilterState(prev => ({
+                      ...prev,
+                      dateRange: { ...prev.dateRange, start: date }
+                    }));
+                  }}
+                  className="flex-1 bg-[#0d1117] border border-[#30363d] rounded-lg px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500"
+                />
+                <input
+                  type="date"
+                  value={filterState.dateRange?.end?.toISOString().split('T')[0] || ''}
+                  onChange={(e) => {
+                    const date = e.target.value ? new Date(e.target.value) : undefined;
+                    setFilterState(prev => ({
+                      ...prev,
+                      dateRange: { ...prev.dateRange, end: date }
+                    }));
+                  }}
+                  className="flex-1 bg-[#0d1117] border border-[#30363d] rounded-lg px-2 py-1 text-xs text-gray-200 focus:outline-none focus:border-purple-500"
+                />
+              </div>
+            </div>
           </div>
-
-          <select
-            value={sortOrder}
-            onChange={(e) => setSortOrder(e.target.value as any)}
-            className="bg-[#161b22] border border-[#30363d] rounded-lg px-2.5 py-1.5 text-xs text-gray-200 focus:outline-none focus:border-purple-500"
-          >
-            <option value="newest">Newest</option>
-            <option value="oldest">Oldest</option>
-            <option value="score">Highest Score</option>
-          </select>
-
-          {(searchTerm || selectedFilter !== 'all' || sortOrder !== 'newest') && (
-            <button
-              onClick={clearFilters}
-              className="text-xs text-gray-400 hover:text-white transition-colors flex items-center gap-1 px-2 py-1"
-            >
-              <X className="w-3 h-3" />
-              Clear
-            </button>
-          )}
-        </div>
+        )}
       </div>
 
       {/* Bulk actions bar */}
       {selectedItems.size > 0 && (
-        <div className="flex items-center justify-between p-3 bg-[#161b22] border border-[#30363d] rounded-xl animate-slideDown">
+        <div className="flex items-center justify-between p-3 bg-[#161b22] border border-[#30363d] rounded-xl">
           <span className="text-sm text-gray-300">
             <span className="font-bold text-white">{selectedItems.size}</span> items selected
           </span>
@@ -366,8 +575,8 @@ export const History: React.FC = () => {
         </div>
       )}
 
-      {/* Enhanced History Table */}
-      <div className="bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl overflow-hidden shadow-2xl shadow-black/20">
+      {/* History Table */}
+      <div className="bg-[#161b22] border border-[#30363d] rounded-2xl overflow-hidden">
         {loading ? (
           <div className="p-12 text-center">
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-purple-500/20 border-t-purple-500"></div>
@@ -445,9 +654,10 @@ export const History: React.FC = () => {
                           <td className="p-4">
                             <div>
                               <span className="font-semibold text-gray-200">{item.projectName}</span>
-                              {item.repository && (
+                              {item.branch && (
                                 <span className="text-xs text-gray-500 font-mono block mt-0.5">
-                                  {item.repository}
+                                  <GitBranch className="w-3 h-3 inline mr-1" />
+                                  {item.branch}
                                 </span>
                               )}
                             </div>
@@ -462,12 +672,12 @@ export const History: React.FC = () => {
                               {criticals.length > 0 && (
                                 <Badge variant="danger" size="sm" className="bg-rose-500/10 text-rose-400 border-rose-500/20">
                                   <AlertCircle className="w-3 h-3 mr-1" />
-                                  {criticals.length} Critical
+                                  {criticals.length}
                                 </Badge>
                               )}
                               {warnings.length > 0 && (
                                 <Badge variant="warning" size="sm" className="bg-amber-500/10 text-amber-400 border-amber-500/20">
-                                  {warnings.length} Warning
+                                  {warnings.length}
                                 </Badge>
                               )}
                               {!hasIssues && (
@@ -486,9 +696,11 @@ export const History: React.FC = () => {
                               <Badge
                                 variant={scoreBadge.variant}
                                 size="sm"
-                                className={`mt-0.5 ${scoreBadge.variant === 'success' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
+                                className={`mt-0.5 ${
+                                  scoreBadge.variant === 'success' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' :
                                   scoreBadge.variant === 'warning' ? 'bg-amber-500/10 text-amber-400 border-amber-500/20' :
-                                    'bg-rose-500/10 text-rose-400 border-rose-500/20'}`}
+                                  'bg-rose-500/10 text-rose-400 border-rose-500/20'
+                                }`}
                               >
                                 {scoreBadge.label}
                               </Badge>
@@ -541,7 +753,7 @@ export const History: React.FC = () => {
               </table>
             </div>
 
-            {/* Footer with pagination info */}
+            {/* Footer */}
             <div className="px-4 py-3 border-t border-[#30363d] flex items-center justify-between text-xs text-gray-500">
               <span>
                 Showing {filteredHistory.length} of {historyList.length} records

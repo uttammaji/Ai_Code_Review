@@ -55,9 +55,7 @@ export const MonacoDiffViewer: React.FC = () => {
 
     try {
       await navigator.clipboard.writeText(modifiedCode);
-
       setCopied(true);
-
       window.setTimeout(() => {
         setCopied(false);
       }, 2000);
@@ -70,7 +68,6 @@ export const MonacoDiffViewer: React.FC = () => {
     setDiffViewActive(false);
   }, [setDiffViewActive]);
 
-  // Do not render Monaco when there is no active issue.
   if (!activeDiffIssue) {
     return null;
   }
@@ -85,10 +82,6 @@ export const MonacoDiffViewer: React.FC = () => {
     activeDiffIssue.suggestedFix ||
     '';
 
-  /*
-   * A stable key prevents React from unnecessarily destroying
-   * and recreating the Monaco DiffEditor.
-   */
   const editorKey = React.useMemo(() => {
     return [
       activeFile?.path || 'no-file',
@@ -102,29 +95,26 @@ export const MonacoDiffViewer: React.FC = () => {
   ]);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4">
-      <div className="w-full max-w-5xl h-[80vh] bg-[#111111] border border-[rgba(197,160,89,0.25)] rounded shadow-2xl flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4">
+      <div className="w-full max-w-5xl h-[80vh] bg-[#0d1117] border border-[#30363d] rounded-xl shadow-2xl flex flex-col overflow-hidden">
 
         {/* Header */}
-        <div className="px-4 py-3 bg-[#0A0A0A] border-b border-[rgba(197,160,89,0.18)] flex items-center justify-between">
+        <div className="px-5 py-3.5 bg-[#0d1117] border-b border-[#30363d] flex items-center justify-between">
           <div className="min-w-0">
-            <h3 className="text-sm font-semibold text-[#D4CFC9] font-serif flex items-center gap-2">
+            <h3 className="text-sm font-semibold text-gray-200 flex items-center gap-2">
               <span className="truncate">
                 Diff View: {activeDiffIssue.title}
               </span>
-
               <span className="text-xs font-mono text-[#C5A059] whitespace-nowrap">
                 Line {activeDiffIssue.line}
               </span>
             </h3>
-
-            <p className="text-xs text-[#D4CFC9]/60 mt-0.5 truncate">
+            <p className="text-xs text-gray-400 mt-0.5 truncate">
               {activeDiffIssue.description}
             </p>
           </div>
 
-          <div className="flex items-center gap-2 ml-4">
-
+          <div className="flex items-center gap-2 ml-4 flex-shrink-0">
             {/* Copy */}
             <Button
               variant="outline"
@@ -149,7 +139,7 @@ export const MonacoDiffViewer: React.FC = () => {
             <button
               type="button"
               onClick={handleClose}
-              className="p-1 text-[#D4CFC9]/60 hover:text-[#C5A059] rounded hover:bg-[#141414]"
+              className="p-1.5 text-gray-400 hover:text-[#C5A059] hover:bg-[#21262d] rounded-lg transition-colors"
               aria-label="Close diff viewer"
             >
               <X className="w-4 h-4" />
@@ -158,7 +148,7 @@ export const MonacoDiffViewer: React.FC = () => {
         </div>
 
         {/* Monaco Diff Editor */}
-        <div className="flex-1 bg-[#0A0A0A] relative min-h-0">
+        <div className="flex-1 bg-[#0d1117] relative min-h-0">
           <DiffEditor
             key={editorKey}
             height="100%"
@@ -169,44 +159,29 @@ export const MonacoDiffViewer: React.FC = () => {
             options={{
               fontSize: 13,
               fontFamily: "'JetBrains Mono', 'Fira Code', monospace",
-
               readOnly: true,
-
               automaticLayout: true,
-
               renderSideBySide: true,
-
               minimap: {
                 enabled: false,
               },
-
               scrollBeyondLastLine: false,
-
               wordWrap: 'on',
-
               folding: true,
-
               lineNumbers: 'on',
-
               renderOverviewRuler: false,
-
               overviewRulerBorder: false,
-
               scrollbar: {
                 verticalScrollbarSize: 8,
                 horizontalScrollbarSize: 8,
               },
-
               diffWordWrap: 'on',
-
               ignoreTrimWhitespace: false,
-
               renderIndicators: true,
-
               originalEditable: false,
             }}
             loading={
-              <div className="h-full flex items-center justify-center bg-[#0A0A0A] text-[#D4CFC9]/60 text-sm">
+              <div className="h-full flex items-center justify-center bg-[#0d1117] text-gray-400 text-sm">
                 Loading diff editor...
               </div>
             }

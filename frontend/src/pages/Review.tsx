@@ -5,7 +5,6 @@ import { AIReviewPanel } from '../components/review/AIReviewPanel';
 import {
   Code2,
   FileUp,
-  Sparkles,
   ShieldCheck,
   Zap,
   Clock,
@@ -18,7 +17,11 @@ import {
   Maximize2,
   Minimize2,
   Terminal,
-  X
+  X,
+  File,
+  Folder,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import { useReviewStore } from '../store/reviewStore';
 import { useUIStore } from '../store/uiStore';
@@ -46,10 +49,8 @@ export const Review: React.FC = () => {
   const { currentReview, openFile, activeFile } = useReviewStore();
   const { addNotification } = useUIStore();
 
-  // Auto-switch to review tab when review results come in
   useEffect(() => {
     if (currentReview && mobileTab === 'editor') {
-      // Small delay to let user see the result before switching
       const timer = setTimeout(() => {
         setMobileTab('review');
       }, 1500);
@@ -64,7 +65,6 @@ export const Review: React.FC = () => {
 
     if (!file) return;
 
-    // Check file size (50KB limit)
     if (file.size > 50_000) {
       setFileError('File too large (max 50KB)');
       addNotification({
@@ -75,7 +75,6 @@ export const Review: React.FC = () => {
       return;
     }
 
-    // Check file type
     const validExtensions = ['.js', '.jsx', '.ts', '.tsx', '.py', '.java', '.c', '.cpp', '.cc', '.hpp', '.go', '.rs', '.json', '.html', '.css', '.txt', '.md', '.yml', '.yaml', '.xml', '.sh', '.sql', '.graphql', '.vue', '.svelte'];
     const fileExt = file.name.substring(file.name.lastIndexOf('.'));
     if (!validExtensions.includes(fileExt)) {
@@ -145,7 +144,7 @@ export const Review: React.FC = () => {
   };
 
   return (
-    <div className={`flex-1 flex flex-col lg:flex-row min-h-0 min-w-0 bg-gradient-to-br from-[#0A0A0A] to-[#111111] overflow-hidden relative ${isEditorFullscreen ? 'fixed inset-0 z-50' : ''}`}>
+    <div className={`flex-1 flex flex-col lg:flex-row min-h-0 min-w-0 bg-[#0d1117] overflow-hidden relative ${isEditorFullscreen ? 'fixed inset-0 z-50' : ''}`}>
       {/* Hidden file input */}
       <input
         ref={fileInputRef}
@@ -156,13 +155,14 @@ export const Review: React.FC = () => {
       />
 
       {/* Mobile Tab Switcher */}
-      <div className="flex lg:hidden bg-[#0A0A0A] border-b border-[#30363d] px-3 py-1.5 shrink-0 z-10 gap-2">
+      <div className="flex lg:hidden bg-[#0d1117] border-b border-[#30363d] px-3 py-1.5 shrink-0 z-10 gap-2">
         <button
           onClick={() => setMobileTab('editor')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-medium transition-all ${mobileTab === 'editor'
+          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+            mobileTab === 'editor'
               ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/20'
               : 'bg-[#161b22] text-gray-400 hover:text-white hover:bg-[#21262d]'
-            }`}
+          }`}
         >
           <Code2 className="w-4 h-4" />
           <span>Editor</span>
@@ -174,12 +174,13 @@ export const Review: React.FC = () => {
         </button>
         <button
           onClick={() => setMobileTab('review')}
-          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-medium transition-all ${mobileTab === 'review'
+          className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-sm font-medium transition-all ${
+            mobileTab === 'review'
               ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-lg shadow-blue-500/20'
               : 'bg-[#161b22] text-gray-400 hover:text-white hover:bg-[#21262d]'
-            }`}
+          }`}
         >
-          <Sparkles className="w-4 h-4" />
+          <Code2 className="w-4 h-4" />
           <span>AI Review</span>
           {currentReview && (
             <Badge variant="success" size="sm" className="bg-white/10 text-white border-none text-[9px]">
@@ -222,7 +223,7 @@ export const Review: React.FC = () => {
 
       {/* Editor Section */}
       <div className={`flex-1 flex-col min-w-0 h-full overflow-hidden ${mobileTab === 'editor' ? 'flex' : 'hidden lg:flex'}`}>
-        {/* Editor Tabs with enhanced styling */}
+        {/* Editor Tabs */}
         <div className="border-b border-[#30363d] bg-[#0d1117]">
           <div className="flex items-center justify-between px-3">
             <EditorTabs />
@@ -238,7 +239,7 @@ export const Review: React.FC = () => {
                   {activeFile.isModified && (
                     <>
                       <span className="w-px h-3 bg-[#30363d]" />
-                      <span className="text-amber-400">● Modified</span>
+                      <span className="text-amber-400">Modified</span>
                     </>
                   )}
                 </>
@@ -247,14 +248,14 @@ export const Review: React.FC = () => {
           </div>
         </div>
 
-        {/* Monaco Editor Container with enhanced styling */}
+        {/* Monaco Editor Container */}
         <div className="flex-1 relative overflow-hidden flex bg-[#0d1117]">
           <MonacoCodeEditor />
           {!activeFile && (
             <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
               <div className="text-center space-y-4">
                 <div className="inline-flex p-4 bg-[#161b22] rounded-full border border-[#30363d]">
-                  <Code2 className="w-12 h-12 text-gray-500" />
+                  <File className="w-12 h-12 text-gray-500" />
                 </div>
                 <div>
                   <h3 className="text-lg font-semibold text-gray-300">No file open</h3>
@@ -273,14 +274,14 @@ export const Review: React.FC = () => {
         </div>
       </div>
 
-      {/* AI Review Panel with toggle */}
+      {/* AI Review Panel */}
       <div className={`h-full ${mobileTab === 'review' ? 'flex flex-1 w-full' : 'hidden lg:flex'} ${isReviewPanelCollapsed ? 'lg:w-12' : 'lg:w-2/5 xl:w-1/3'}`}>
         <AIReviewPanel />
       </div>
 
       {/* File Error Toast */}
       {fileError && (
-        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 p-3 bg-rose-950/90 border border-rose-800/60 rounded-xl text-sm text-rose-300 flex items-center gap-2 shadow-2xl backdrop-blur-sm animate-slideUp">
+        <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-30 p-3 bg-rose-950/90 border border-rose-800/60 rounded-xl text-sm text-rose-300 flex items-center gap-2 shadow-2xl backdrop-blur-sm">
           <AlertCircle className="w-4 h-4 text-rose-400" />
           <span>{fileError}</span>
           <button

@@ -7,14 +7,15 @@ import {
   ArrowRight,
   Github,
   Lock,
-  Sparkles,
   ShieldCheck,
   Clock,
   CheckCircle2,
   AlertCircle,
   RefreshCw,
   Key,
-  LogIn
+  LogIn,
+  User,
+  Fingerprint
 } from 'lucide-react';
 
 export const Login: React.FC = () => {
@@ -22,7 +23,7 @@ export const Login: React.FC = () => {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
   const [showOTP, setShowOTP] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(300); // 5 minutes
+  const [timeLeft, setTimeLeft] = useState(300);
   const [resendDisabled, setResendDisabled] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -65,7 +66,6 @@ export const Login: React.FC = () => {
       setShowOTP(true);
       setTimeLeft(300);
       setResendDisabled(true);
-      // Focus first OTP input
       setTimeout(() => inputRefs.current[0]?.focus(), 100);
     } catch (err: any) {
       setError(err.response?.data?.message || err.response?.data?.error || 'Failed to send verification code. Try again.');
@@ -99,7 +99,6 @@ export const Login: React.FC = () => {
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Invalid verification code. Please try again.');
-      // Clear OTP inputs on error
       setOtp(['', '', '', '', '', '']);
       inputRefs.current[0]?.focus();
     } finally {
@@ -109,27 +108,23 @@ export const Login: React.FC = () => {
 
   const handleOtpChange = (index: number, value: string) => {
     if (value.length > 1) {
-      // Handle paste
       const pastedValue = value.slice(0, 6);
       const newOtp = [...otp];
       for (let i = 0; i < pastedValue.length && i < 6; i++) {
         newOtp[i] = pastedValue[i];
       }
       setOtp(newOtp);
-      // Focus last filled input or next empty
       const nextIndex = Math.min(pastedValue.length, 5);
       inputRefs.current[nextIndex]?.focus();
       return;
     }
 
-    // Only allow numbers
     if (value && !/^\d$/.test(value)) return;
 
     const newOtp = [...otp];
     newOtp[index] = value;
     setOtp(newOtp);
 
-    // Auto-advance to next input
     if (value && index < 5) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -167,7 +162,7 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-200">
+    <div className="space-y-6">
       {searchParams.get('expired') && (
         <div className="p-4 bg-amber-950/40 border border-amber-800/60 rounded-xl text-xs text-amber-300 flex items-start gap-2">
           <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
@@ -179,7 +174,7 @@ export const Login: React.FC = () => {
         <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
           {showOTP ? (
             <>
-              <Key className="w-5 h-5 text-blue-400" />
+              <Fingerprint className="w-5 h-5 text-blue-400" />
               <span>Verify your identity</span>
             </>
           ) : (
@@ -205,7 +200,6 @@ export const Login: React.FC = () => {
       )}
 
       {!showOTP ? (
-        // Email Input Form
         <form onSubmit={handleSendOTP} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-300 mb-1.5">
@@ -235,7 +229,6 @@ export const Login: React.FC = () => {
           </Button>
         </form>
       ) : (
-        // OTP Verification Form
         <div className="space-y-6">
           {/* OTP Inputs */}
           <div>
@@ -255,8 +248,9 @@ export const Login: React.FC = () => {
                   onChange={(e) => handleOtpChange(index, e.target.value)}
                   onKeyDown={(e) => handleKeyDown(index, e)}
                   onPaste={handlePaste}
-                  className={`w-12 h-14 text-center text-xl font-bold bg-[#161b22] border rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${digit ? 'border-blue-500/50 bg-blue-500/5' : 'border-[#30363d]'
-                    }`}
+                  className={`w-12 h-14 text-center text-xl font-bold bg-[#161b22] border rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ${
+                    digit ? 'border-blue-500/50 bg-blue-500/5' : 'border-[#30363d]'
+                  }`}
                 />
               ))}
             </div>
@@ -268,7 +262,7 @@ export const Login: React.FC = () => {
           {/* Timer and Resend */}
           <div className="flex items-center justify-between text-sm">
             <div className="flex items-center gap-2 text-gray-400">
-              <Clock className={`w-4 h-4 ${timeLeft < 60 ? 'text-amber-400 animate-pulse' : ''}`} />
+              <Clock className={`w-4 h-4 ${timeLeft < 60 ? 'text-amber-400' : ''}`} />
               <span className={timeLeft < 60 ? 'text-amber-400 font-mono' : 'font-mono'}>
                 {formatTime(timeLeft)}
               </span>
@@ -277,10 +271,11 @@ export const Login: React.FC = () => {
             <button
               onClick={handleResendOTP}
               disabled={resendDisabled || loading}
-              className={`text-sm font-medium transition-all flex items-center gap-1 ${resendDisabled || loading
+              className={`text-sm font-medium transition-all flex items-center gap-1 ${
+                resendDisabled || loading
                   ? 'text-gray-500 cursor-not-allowed'
                   : 'text-blue-400 hover:text-blue-300 hover:underline'
-                }`}
+              }`}
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
               Resend code
@@ -302,7 +297,7 @@ export const Login: React.FC = () => {
               onClick={handleBackToEmail}
               className="w-full text-center text-sm text-gray-400 hover:text-white transition-colors"
             >
-              ← Change email address
+              Change email address
             </button>
           </div>
         </div>

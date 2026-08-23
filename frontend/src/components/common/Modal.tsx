@@ -26,24 +26,45 @@ export const Modal: React.FC<ModalProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isOpen]);
+
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-xs">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+      onClick={onClose}
+    >
       <div 
-        className={`w-full ${maxWidth} bg-[#161b22] border border-[#30363d] rounded-lg shadow-2xl overflow-hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in-95 duration-150`}
+        className={`w-full ${maxWidth} bg-[#161b22] border border-[#30363d] rounded-xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]`}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between px-4 py-3 border-b border-[#30363d] bg-[#0d1117]">
-          <h3 className="text-sm font-semibold text-gray-200 tracking-tight">{title}</h3>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-3.5 border-b border-[#30363d] bg-[#0d1117]">
+          <h3 className="text-sm font-semibold text-gray-200 tracking-tight">
+            {title}
+          </h3>
           <button
             onClick={onClose}
-            className="p-1 text-gray-400 hover:text-white rounded hover:bg-[#21262d] transition-colors"
+            className="p-1.5 text-gray-400 hover:text-white hover:bg-[#21262d] rounded-lg transition-all duration-200"
+            aria-label="Close modal"
           >
             <X className="w-4 h-4" />
           </button>
         </div>
-        <div className="p-4 overflow-y-auto custom-scrollbar flex-1">
+
+        {/* Content */}
+        <div className="p-5 overflow-y-auto custom-scrollbar flex-1">
           {children}
         </div>
       </div>

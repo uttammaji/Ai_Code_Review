@@ -6,7 +6,6 @@ import { Badge } from '../components/common/Badge';
 import {
   Settings as SettingsIcon,
   Shield,
-  Sparkles,
   Moon,
   Lock,
   User,
@@ -33,14 +32,16 @@ import {
   ChevronRight,
   Palette,
   Sliders,
-  Award
+  Award,
+  Bot,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 export const Settings: React.FC = () => {
   const { user } = useAuthStore();
   const { addNotification } = useUIStore();
 
-  // State for settings
   const [strictness, setStrictness] = useState('HIGH');
   const [secPriority, setSecPriority] = useState('CRITICAL_FIRST');
   const [theme, setTheme] = useState('dark');
@@ -53,10 +54,9 @@ export const Settings: React.FC = () => {
   const [saved, setSaved] = useState(false);
   const [activeSection, setActiveSection] = useState<'general' | 'ai' | 'security' | 'notifications' | 'integrations'>('general');
 
-  // Settings sections
   const sections = [
     { id: 'general', label: 'General', icon: SettingsIcon },
-    { id: 'ai', label: 'AI Preferences', icon: Sparkles },
+    { id: 'ai', label: 'AI Preferences', icon: Bot },
     { id: 'security', label: 'Security', icon: Shield },
     { id: 'notifications', label: 'Notifications', icon: Bell },
     { id: 'integrations', label: 'Integrations', icon: Cloud },
@@ -77,7 +77,7 @@ export const Settings: React.FC = () => {
   };
 
   const handleReset = () => {
-    if (confirm('Reset all settings to default values?')) {
+    if (window.confirm('Reset all settings to default values?')) {
       setStrictness('HIGH');
       setSecPriority('CRITICAL_FIRST');
       setTheme('dark');
@@ -95,9 +95,9 @@ export const Settings: React.FC = () => {
   };
 
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6 space-y-6 bg-gradient-to-br from-[#0d1117] via-[#0d1117] to-[#161b22]">
-      {/* Enhanced Header */}
-      <div className="relative overflow-hidden p-6 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl">
+    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 lg:p-6 space-y-6 bg-[#0d1117]">
+      {/* Header */}
+      <div className="relative overflow-hidden p-6 bg-[#161b22] border border-[#30363d] rounded-2xl">
         <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/4"></div>
 
         <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -147,7 +147,7 @@ export const Settings: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Sidebar Navigation */}
         <div className="lg:col-span-1">
-          <div className="p-3 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl">
+          <div className="p-3 bg-[#161b22] border border-[#30363d] rounded-2xl">
             <div className="space-y-1">
               {sections.map((section) => {
                 const Icon = section.icon;
@@ -155,10 +155,11 @@ export const Settings: React.FC = () => {
                   <button
                     key={section.id}
                     onClick={() => setActiveSection(section.id as any)}
-                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${activeSection === section.id
+                    className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      activeSection === section.id
                         ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
                         : 'text-gray-400 hover:text-white hover:bg-[#21262d]'
-                      }`}
+                    }`}
                   >
                     <Icon className="w-4 h-4" />
                     <span>{section.label}</span>
@@ -185,7 +186,7 @@ export const Settings: React.FC = () => {
         <div className="lg:col-span-3 space-y-6">
           {/* General Settings */}
           {activeSection === 'general' && (
-            <div className="p-6 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl space-y-5">
+            <div className="p-6 bg-[#161b22] border border-[#30363d] rounded-2xl space-y-5">
               <div className="flex items-center gap-2 pb-4 border-b border-[#30363d]">
                 <SettingsIcon className="w-4 h-4 text-blue-400" />
                 <h3 className="text-sm font-semibold text-gray-200">General Preferences</h3>
@@ -207,10 +208,11 @@ export const Settings: React.FC = () => {
                         <button
                           key={themeOption.id}
                           onClick={() => setTheme(themeOption.id)}
-                          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border transition-all ${theme === themeOption.id
+                          className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl border transition-all ${
+                            theme === themeOption.id
                               ? 'border-blue-500 bg-blue-500/10 text-blue-400'
                               : 'border-[#30363d] bg-[#0d1117] text-gray-400 hover:text-white hover:border-gray-500'
-                            }`}
+                          }`}
                         >
                           <Icon className="w-4 h-4" />
                           <span className="text-sm font-medium">{themeOption.label}</span>
@@ -247,11 +249,13 @@ export const Settings: React.FC = () => {
                   </div>
                   <button
                     onClick={() => setAutoSave(!autoSave)}
-                    className={`relative w-11 h-6 rounded-full transition-all ${autoSave ? 'bg-blue-600' : 'bg-[#30363d]'
-                      }`}
+                    className={`relative w-11 h-6 rounded-full transition-all ${
+                      autoSave ? 'bg-blue-600' : 'bg-[#30363d]'
+                    }`}
                   >
-                    <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${autoSave ? 'right-0.5' : 'left-0.5'
-                      }`} />
+                    <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${
+                      autoSave ? 'right-0.5' : 'left-0.5'
+                    }`} />
                   </button>
                 </div>
               </div>
@@ -260,9 +264,9 @@ export const Settings: React.FC = () => {
 
           {/* AI Preferences */}
           {activeSection === 'ai' && (
-            <div className="p-6 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl space-y-5">
+            <div className="p-6 bg-[#161b22] border border-[#30363d] rounded-2xl space-y-5">
               <div className="flex items-center gap-2 pb-4 border-b border-[#30363d]">
-                <Sparkles className="w-4 h-4 text-blue-400" />
+                <Bot className="w-4 h-4 text-blue-400" />
                 <h3 className="text-sm font-semibold text-gray-200">AI Code Review Heuristics</h3>
               </div>
 
@@ -282,10 +286,11 @@ export const Settings: React.FC = () => {
                         <button
                           key={option.id}
                           onClick={() => setStrictness(option.id)}
-                          className={`p-3 rounded-xl border text-left transition-all ${strictness === option.id
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            strictness === option.id
                               ? 'border-blue-500 bg-blue-500/10'
                               : 'border-[#30363d] bg-[#0d1117] hover:border-gray-500'
-                            }`}
+                          }`}
                         >
                           <div className="flex items-center gap-2 mb-1">
                             <Icon className={`w-4 h-4 ${strictness === option.id ? 'text-blue-400' : 'text-gray-500'}`} />
@@ -314,10 +319,11 @@ export const Settings: React.FC = () => {
                         <button
                           key={option.id}
                           onClick={() => setSecPriority(option.id)}
-                          className={`p-3 rounded-xl border text-left transition-all ${secPriority === option.id
+                          className={`p-3 rounded-xl border text-left transition-all ${
+                            secPriority === option.id
                               ? 'border-blue-500 bg-blue-500/10'
                               : 'border-[#30363d] bg-[#0d1117] hover:border-gray-500'
-                            }`}
+                          }`}
                         >
                           <div className="flex items-center gap-2 mb-1">
                             <Icon className={`w-4 h-4 ${secPriority === option.id ? 'text-blue-400' : 'text-gray-500'}`} />
@@ -337,7 +343,7 @@ export const Settings: React.FC = () => {
 
           {/* Security Settings */}
           {activeSection === 'security' && (
-            <div className="p-6 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl space-y-5">
+            <div className="p-6 bg-[#161b22] border border-[#30363d] rounded-2xl space-y-5">
               <div className="flex items-center gap-2 pb-4 border-b border-[#30363d]">
                 <Shield className="w-4 h-4 text-emerald-400" />
                 <h3 className="text-sm font-semibold text-gray-200">Security & Authentication</h3>
@@ -354,11 +360,13 @@ export const Settings: React.FC = () => {
                   </div>
                   <button
                     onClick={() => setTwoFactorAuth(!twoFactorAuth)}
-                    className={`relative w-11 h-6 rounded-full transition-all ${twoFactorAuth ? 'bg-emerald-600' : 'bg-[#30363d]'
-                      }`}
+                    className={`relative w-11 h-6 rounded-full transition-all ${
+                      twoFactorAuth ? 'bg-emerald-600' : 'bg-[#30363d]'
+                    }`}
                   >
-                    <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${twoFactorAuth ? 'right-0.5' : 'left-0.5'
-                      }`} />
+                    <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${
+                      twoFactorAuth ? 'right-0.5' : 'left-0.5'
+                    }`} />
                   </button>
                 </div>
 
@@ -390,7 +398,7 @@ export const Settings: React.FC = () => {
 
           {/* Notifications */}
           {activeSection === 'notifications' && (
-            <div className="p-6 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl space-y-5">
+            <div className="p-6 bg-[#161b22] border border-[#30363d] rounded-2xl space-y-5">
               <div className="flex items-center gap-2 pb-4 border-b border-[#30363d]">
                 <Bell className="w-4 h-4 text-amber-400" />
                 <h3 className="text-sm font-semibold text-gray-200">Notification Preferences</h3>
@@ -404,11 +412,13 @@ export const Settings: React.FC = () => {
                   </div>
                   <button
                     onClick={() => setNotifications(!notifications)}
-                    className={`relative w-11 h-6 rounded-full transition-all ${notifications ? 'bg-blue-600' : 'bg-[#30363d]'
-                      }`}
+                    className={`relative w-11 h-6 rounded-full transition-all ${
+                      notifications ? 'bg-blue-600' : 'bg-[#30363d]'
+                    }`}
                   >
-                    <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${notifications ? 'right-0.5' : 'left-0.5'
-                      }`} />
+                    <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${
+                      notifications ? 'right-0.5' : 'left-0.5'
+                    }`} />
                   </button>
                 </div>
 
@@ -422,11 +432,13 @@ export const Settings: React.FC = () => {
                   </div>
                   <button
                     onClick={() => setEmailReports(!emailReports)}
-                    className={`relative w-11 h-6 rounded-full transition-all ${emailReports ? 'bg-blue-600' : 'bg-[#30363d]'
-                      }`}
+                    className={`relative w-11 h-6 rounded-full transition-all ${
+                      emailReports ? 'bg-blue-600' : 'bg-[#30363d]'
+                    }`}
                   >
-                    <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${emailReports ? 'right-0.5' : 'left-0.5'
-                      }`} />
+                    <div className={`absolute top-0.5 w-5 h-5 bg-white rounded-full transition-all ${
+                      emailReports ? 'right-0.5' : 'left-0.5'
+                    }`} />
                   </button>
                 </div>
 
@@ -448,7 +460,7 @@ export const Settings: React.FC = () => {
 
           {/* Integrations */}
           {activeSection === 'integrations' && (
-            <div className="p-6 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-2xl space-y-5">
+            <div className="p-6 bg-[#161b22] border border-[#30363d] rounded-2xl space-y-5">
               <div className="flex items-center gap-2 pb-4 border-b border-[#30363d]">
                 <Cloud className="w-4 h-4 text-purple-400" />
                 <h3 className="text-sm font-semibold text-gray-200">Integrations</h3>

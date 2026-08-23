@@ -22,14 +22,14 @@ export const MonacoCodeEditor: React.FC = () => {
         { token: 'function', foreground: 'D4CFC9' },
       ],
       colors: {
-        'editor.background': '#0A0A0A',
+        'editor.background': '#0d1117',
         'editor.foreground': '#D4CFC9',
-        'editor.lineHighlightBackground': '#141414',
+        'editor.lineHighlightBackground': '#161b22',
         'editorCursor.foreground': '#C5A059',
         'editorWhitespace.foreground': 'rgba(197, 160, 89, 0.15)',
         'editorLineNumber.foreground': 'rgba(212, 207, 201, 0.3)',
         'editorLineNumber.activeForeground': '#C5A059',
-        'editorGutter.background': '#0A0A0A',
+        'editorGutter.background': '#0d1117',
       }
     });
 
@@ -69,15 +69,15 @@ export const MonacoCodeEditor: React.FC = () => {
 
   if (!activeFile) {
     return (
-      <div className="flex-1 bg-[#0A0A0A] flex flex-col items-center justify-center text-[#D4CFC9]/50 text-xs p-6">
+      <div className="flex-1 bg-[#0d1117] flex flex-col items-center justify-center text-gray-500 text-xs p-6">
         <p className="font-serif text-[#C5A059] text-sm mb-1">No file selected in workspace</p>
-        <p className="text-[11px] text-[#D4CFC9]/40">Select a file from the Explorer sidebar to start editing.</p>
+        <p className="text-[11px] text-gray-500">Select a file from the Explorer sidebar to start editing.</p>
       </div>
     );
   }
 
   return (
-    <div className="flex-1 h-full bg-[#0A0A0A] relative">
+    <div className="flex-1 h-full bg-[#0d1117] relative">
       <Editor
         height="100%"
         language={activeFile.language || 'javascript'}
@@ -94,12 +94,12 @@ export const MonacoCodeEditor: React.FC = () => {
           wordWrap: 'on',
           lineNumbers: 'on',
           renderLineHighlight: 'all',
-          cursorBlinking: 'smooth',
+          cursorBlinking: 'solid',
           smoothScrolling: true,
           padding: { top: 12 }
         }}
         loading={
-          <div className="flex items-center justify-center h-full text-xs text-[#C5A059] bg-[#0A0A0A]">
+          <div className="flex items-center justify-center h-full text-xs text-[#C5A059] bg-[#0d1117]">
             Loading Monaco Editor...
           </div>
         }

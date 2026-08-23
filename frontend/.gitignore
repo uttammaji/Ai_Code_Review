@@ -8,3 +8,5 @@ coverage/
 !.env.example
 
 nginx.conf
+
+.env

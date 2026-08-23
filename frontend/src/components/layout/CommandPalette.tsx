@@ -13,8 +13,16 @@ import {
   Settings, 
   LogOut, 
   Plus, 
-  Sparkles,
-  Command
+  Command,
+  Rocket,
+  FolderPlus,
+  Home,
+  FileCode,
+  Github,
+  Clock,
+  Activity,
+  Sliders,
+  UserMinus
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -44,7 +52,7 @@ export const CommandPalette: React.FC<{ onNewProjectClick: () => void }> = ({ on
       id: 'cmd-review',
       title: 'Run AI Code Review',
       category: 'Actions',
-      icon: <Sparkles className="w-4 h-4 text-blue-400" />,
+      icon: <Code2 className="w-4 h-4 text-blue-400" />,
       action: () => {
         setCommandPaletteOpen(false);
         setActiveSection('review');
@@ -55,7 +63,7 @@ export const CommandPalette: React.FC<{ onNewProjectClick: () => void }> = ({ on
       id: 'cmd-new-proj',
       title: 'Create New Project',
       category: 'Projects',
-      icon: <Plus className="w-4 h-4 text-emerald-400" />,
+      icon: <FolderPlus className="w-4 h-4 text-emerald-400" />,
       action: () => {
         setCommandPaletteOpen(false);
         onNewProjectClick();
@@ -65,7 +73,7 @@ export const CommandPalette: React.FC<{ onNewProjectClick: () => void }> = ({ on
       id: 'nav-dash',
       title: 'Go to Dashboard',
       category: 'Navigation',
-      icon: <LayoutDashboard className="w-4 h-4 text-purple-400" />,
+      icon: <Home className="w-4 h-4 text-purple-400" />,
       action: () => {
         setCommandPaletteOpen(false);
         setActiveSection('dashboard');
@@ -87,7 +95,7 @@ export const CommandPalette: React.FC<{ onNewProjectClick: () => void }> = ({ on
       id: 'nav-review',
       title: 'Open Code Review Workspace',
       category: 'Navigation',
-      icon: <Code2 className="w-4 h-4 text-amber-400" />,
+      icon: <FileCode className="w-4 h-4 text-amber-400" />,
       action: () => {
         setCommandPaletteOpen(false);
         setActiveSection('review');
@@ -98,7 +106,7 @@ export const CommandPalette: React.FC<{ onNewProjectClick: () => void }> = ({ on
       id: 'nav-github',
       title: 'Connect / Manage GitHub',
       category: 'Navigation',
-      icon: <GitBranch className="w-4 h-4 text-emerald-400" />,
+      icon: <Github className="w-4 h-4 text-emerald-400" />,
       action: () => {
         setCommandPaletteOpen(false);
         setActiveSection('github');
@@ -109,7 +117,7 @@ export const CommandPalette: React.FC<{ onNewProjectClick: () => void }> = ({ on
       id: 'nav-history',
       title: 'View Review History',
       category: 'Navigation',
-      icon: <History className="w-4 h-4 text-cyan-400" />,
+      icon: <Clock className="w-4 h-4 text-cyan-400" />,
       action: () => {
         setCommandPaletteOpen(false);
         setActiveSection('history');
@@ -120,7 +128,7 @@ export const CommandPalette: React.FC<{ onNewProjectClick: () => void }> = ({ on
       id: 'nav-analytics',
       title: 'Open Developer Analytics',
       category: 'Navigation',
-      icon: <BarChart3 className="w-4 h-4 text-rose-400" />,
+      icon: <Activity className="w-4 h-4 text-rose-400" />,
       action: () => {
         setCommandPaletteOpen(false);
         setActiveSection('analytics');
@@ -131,7 +139,7 @@ export const CommandPalette: React.FC<{ onNewProjectClick: () => void }> = ({ on
       id: 'nav-settings',
       title: 'Open System Settings',
       category: 'Settings',
-      icon: <Settings className="w-4 h-4 text-gray-400" />,
+      icon: <Sliders className="w-4 h-4 text-gray-400" />,
       action: () => {
         setCommandPaletteOpen(false);
         setActiveSection('settings');
@@ -142,7 +150,7 @@ export const CommandPalette: React.FC<{ onNewProjectClick: () => void }> = ({ on
       id: 'cmd-logout',
       title: 'Sign Out / Logout',
       category: 'Account',
-      icon: <LogOut className="w-4 h-4 text-red-400" />,
+      icon: <UserMinus className="w-4 h-4 text-red-400" />,
       action: () => {
         setCommandPaletteOpen(false);
         logout();
@@ -157,23 +165,23 @@ export const CommandPalette: React.FC<{ onNewProjectClick: () => void }> = ({ on
 
   return (
     <div 
-      className="fixed inset-0 z-50 flex items-start justify-center pt-20 bg-black/70 backdrop-blur-xs p-4"
+      className="fixed inset-0 z-50 flex items-start justify-center pt-20 bg-black/70 p-4"
       onClick={() => setCommandPaletteOpen(false)}
     >
       <div 
-        className="w-full max-w-xl bg-[#161b22] border border-[#30363d] rounded-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-100"
+        className="w-full max-w-xl bg-[#161b22] border border-[#30363d] rounded-xl shadow-2xl overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search Bar */}
-        <div className="flex items-center gap-2 px-3 py-3 border-b border-[#30363d] bg-[#0d1117]">
-          <Search className="w-4 h-4 text-blue-400 shrink-0" />
+        <div className="flex items-center gap-2 px-4 py-3.5 border-b border-[#30363d] bg-[#0d1117]">
+          <Search className="w-4 h-4 text-[#C5A059] shrink-0" />
           <input
             type="text"
             autoFocus
             placeholder="Type a command or search..."
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            className="w-full bg-transparent text-sm text-gray-100 placeholder-gray-500 focus:outline-none"
+            className="w-full bg-transparent text-sm text-gray-200 placeholder-gray-500 focus:outline-none"
           />
           <span className="text-[10px] bg-[#21262d] px-1.5 py-0.5 rounded border border-[#30363d] font-mono text-gray-400">
             ESC
@@ -181,7 +189,7 @@ export const CommandPalette: React.FC<{ onNewProjectClick: () => void }> = ({ on
         </div>
 
         {/* Results List */}
-        <div className="max-h-80 overflow-y-auto p-1 custom-scrollbar">
+        <div className="max-h-80 overflow-y-auto p-1.5 custom-scrollbar">
           {filteredCommands.length === 0 ? (
             <div className="p-4 text-center text-xs text-gray-500">
               No matching commands found.
@@ -191,10 +199,10 @@ export const CommandPalette: React.FC<{ onNewProjectClick: () => void }> = ({ on
               <button
                 key={cmd.id}
                 onClick={cmd.action}
-                className="w-full flex items-center justify-between px-3 py-2 rounded hover:bg-[#21262d] transition-colors text-left group"
+                className="w-full flex items-center justify-between px-3 py-2.5 rounded-lg hover:bg-[#21262d] transition-colors duration-200 text-left group"
               >
                 <div className="flex items-center gap-2.5">
-                  <div className="p-1 rounded bg-[#0d1117] border border-[#30363d] group-hover:border-gray-600">
+                  <div className="p-1.5 rounded bg-[#0d1117] border border-[#30363d] group-hover:border-[#30363d]">
                     {cmd.icon}
                   </div>
                   <span className="text-xs text-gray-200 group-hover:text-white font-medium">

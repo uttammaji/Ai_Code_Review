@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet } from 'react-router-dom';
-import { Terminal, Code2, ShieldCheck, Sparkles } from 'lucide-react';
+import { Terminal, Code2, ShieldCheck } from 'lucide-react';
 
 export const AuthLayout: React.FC = () => {
   return (
@@ -9,7 +9,7 @@ export const AuthLayout: React.FC = () => {
       <div className="lg:w-1/2 p-8 lg:p-12 bg-[#161b22] border-r border-[#30363d] flex flex-col justify-between relative overflow-hidden">
         {/* Top logo */}
         <div className="flex items-center gap-2.5 z-10">
-          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-blue-600 to-indigo-600 flex items-center justify-center text-white font-mono font-bold text-sm shadow-md">
+          <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-[#C5A059] to-[#8E6D2F] flex items-center justify-center text-[#0A0A0A] font-mono font-bold text-sm shadow-md">
             &gt;_
           </div>
           <div>
@@ -55,8 +55,8 @@ export const AuthLayout: React.FC = () => {
             <span>20+ Languages</span>
           </div>
           <div className="flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-purple-400 shrink-0" />
-            <span>Gemini Powered</span>
+            <Terminal className="w-4 h-4 text-purple-400 shrink-0" />
+            <span>CLI & API</span>
           </div>
         </div>
       </div>

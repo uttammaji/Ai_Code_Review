@@ -6,7 +6,6 @@ import { useReviewStore } from '../../store/reviewStore';
 import { useAuthStore } from '../../store/authStore';
 import { 
   GitBranch, 
-  Sparkles, 
   Save, 
   Bell, 
   Command, 
@@ -18,7 +17,10 @@ import {
   User,
   Settings as SettingsIcon,
   LogOut,
-  ChevronDown
+  ChevronDown,
+  Code2,
+  Folder,
+  Home
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -50,26 +52,26 @@ export const TopToolbar: React.FC<{ onNewProjectClick: () => void }> = ({ onNewP
   };
 
   return (
-    <header className="h-10 bg-[#0A0A0A] border-b border-[rgba(197,160,89,0.18)] px-3 flex items-center justify-between z-20 shrink-0 select-none text-xs">
+    <header className="h-10 bg-[#0d1117] border-b border-[#30363d] px-3 flex items-center justify-between z-20 shrink-0 select-none text-xs">
       {/* Left side: Sidebar toggles & Workspace context */}
       <div className="flex items-center gap-2 min-w-0">
         <button
           onClick={toggleSidebar}
           title="Toggle Side Panel (Ctrl+B)"
-          className="p-1.5 text-[#D4CFC9]/60 hover:text-[#C5A059] rounded hover:bg-[#141414] transition-colors shrink-0"
+          className="p-1.5 text-gray-500 hover:text-[#C5A059] rounded hover:bg-[#161b22] transition-colors duration-200 shrink-0"
         >
           <PanelLeft className="w-4 h-4" />
         </button>
 
-        <div className="h-4 w-px bg-[rgba(197,160,89,0.18)] shrink-0" />
+        <div className="h-4 w-px bg-[#30363d] shrink-0" />
 
         {/* Project & Branch Breadcrumb */}
-        <div className="flex items-center gap-1.5 text-[#D4CFC9] font-medium min-w-0 truncate">
-          <span className="text-[#D4CFC9]/80 font-mono truncate max-w-[100px] sm:max-w-none">
+        <div className="flex items-center gap-1.5 text-gray-200 font-medium min-w-0 truncate">
+          <span className="text-gray-400 font-mono truncate max-w-[100px] sm:max-w-none">
             {selectedProject ? selectedProject.name : 'AI-Code-Review'}
           </span>
-          <span className="text-[#D4CFC9]/30 hidden sm:inline">/</span>
-          <div className="hidden sm:flex items-center gap-1 bg-[#141414] px-2 py-0.5 rounded border border-[rgba(197,160,89,0.2)] text-[11px] text-[#C5A059] shrink-0">
+          <span className="text-gray-600 hidden sm:inline">/</span>
+          <div className="hidden sm:flex items-center gap-1 bg-[#161b22] px-2 py-0.5 rounded border border-[#30363d] text-[11px] text-[#C5A059] shrink-0">
             <GitBranch className="w-3 h-3 text-[#C5A059]" />
             <span className="font-mono">{selectedBranch || 'main'}</span>
           </div>
@@ -79,11 +81,11 @@ export const TopToolbar: React.FC<{ onNewProjectClick: () => void }> = ({ onNewP
       {/* Middle: Command Palette Launcher */}
       <button
         onClick={() => setCommandPaletteOpen(true)}
-        className="hidden md:flex items-center gap-2 bg-[#111111] hover:bg-[#161616] border border-[rgba(197,160,89,0.18)] text-[#D4CFC9]/60 px-3 py-1 rounded text-xs w-64 max-w-xs transition-colors"
+        className="hidden md:flex items-center gap-2 bg-[#161b22] hover:bg-[#1c2333] border border-[#30363d] text-gray-500 px-3 py-1 rounded text-xs w-64 max-w-xs transition-colors duration-200"
       >
         <Search className="w-3.5 h-3.5 text-[#C5A059]/70" />
         <span className="flex-1 text-left">Search commands or files...</span>
-        <span className="flex items-center gap-0.5 bg-[#0A0A0A] px-1.5 py-0.2 rounded border border-[rgba(197,160,89,0.2)] text-[10px] font-mono text-[#C5A059]">
+        <span className="flex items-center gap-0.5 bg-[#0d1117] px-1.5 py-0.2 rounded border border-[#30363d] text-[10px] font-mono text-[#C5A059]">
           <Command className="w-2.5 h-2.5" /> K
         </span>
       </button>
@@ -94,9 +96,9 @@ export const TopToolbar: React.FC<{ onNewProjectClick: () => void }> = ({ onNewP
         <button
           onClick={handleRunReview}
           disabled={reviewLoading}
-          className="flex items-center gap-1.5 bg-[#C5A059] hover:bg-[#D4AF37] text-[#0A0A0A] font-semibold px-3 py-1 rounded shadow-sm shadow-[#C5A059]/10 transition-colors text-xs"
+          className="flex items-center gap-1.5 bg-[#C5A059] hover:bg-[#D4AF37] text-[#0A0A0A] font-semibold px-3 py-1 rounded shadow-sm shadow-[#C5A059]/10 transition-colors duration-200 text-xs"
         >
-          <Sparkles className="w-3.5 h-3.5" />
+          <Code2 className="w-3.5 h-3.5" />
           <span>{reviewLoading ? 'Reviewing...' : 'Run Review'}</span>
         </button>
 
@@ -104,10 +106,10 @@ export const TopToolbar: React.FC<{ onNewProjectClick: () => void }> = ({ onNewP
         <button
           onClick={handleSave}
           title="Save file (Ctrl+S)"
-          className="p-1 text-[#D4CFC9]/60 hover:text-[#C5A059] rounded hover:bg-[#141414] transition-colors relative"
+          className="p-1 text-gray-500 hover:text-[#C5A059] rounded hover:bg-[#161b22] transition-colors duration-200 relative"
         >
           {savedSuccess ? (
-            <Check className="w-4 h-4 text-emerald-400 animate-in zoom-in" />
+            <Check className="w-4 h-4 text-emerald-400" />
           ) : (
             <Save className="w-4 h-4" />
           )}
@@ -116,7 +118,7 @@ export const TopToolbar: React.FC<{ onNewProjectClick: () => void }> = ({ onNewP
         <button
           onClick={toggleBottomPanel}
           title="Toggle Bottom Terminal (Ctrl+J)"
-          className="p-1 text-[#D4CFC9]/60 hover:text-[#C5A059] rounded hover:bg-[#141414] transition-colors"
+          className="p-1 text-gray-500 hover:text-[#C5A059] rounded hover:bg-[#161b22] transition-colors duration-200"
         >
           <PanelBottom className="w-4 h-4" />
         </button>
@@ -124,8 +126,8 @@ export const TopToolbar: React.FC<{ onNewProjectClick: () => void }> = ({ onNewP
         {/* GitHub Indicator */}
         <div 
           onClick={() => navigate('/github')}
-          className={`flex items-center gap-1 px-2 py-0.5 rounded cursor-pointer border ${
-            connected ? 'bg-[#1a231b] border-emerald-800/40 text-emerald-400' : 'bg-[#141414] border-[rgba(197,160,89,0.2)] text-[#D4CFC9]/60'
+          className={`flex items-center gap-1 px-2 py-0.5 rounded cursor-pointer border transition-colors duration-200 ${
+            connected ? 'bg-emerald-950/30 border-emerald-800/40 text-emerald-400 hover:bg-emerald-950/40' : 'bg-[#161b22] border-[#30363d] text-gray-500 hover:text-gray-300'
           }`}
           title={connected ? 'GitHub Connected' : 'Connect GitHub'}
         >
@@ -135,13 +137,13 @@ export const TopToolbar: React.FC<{ onNewProjectClick: () => void }> = ({ onNewP
           </span>
         </div>
 
-        <div className="h-4 w-px bg-[rgba(197,160,89,0.18)]" />
+        <div className="h-4 w-px bg-[#30363d]" />
 
         {/* User Profile Menu */}
         <div className="relative">
           <button
             onClick={() => setUserMenuOpen(!userMenuOpen)}
-            className="flex items-center gap-1.5 p-0.5 rounded hover:bg-[#141414] transition-colors"
+            className="flex items-center gap-1.5 p-0.5 rounded hover:bg-[#161b22] transition-colors duration-200"
           >
             <div className="w-6 h-6 rounded bg-[#C5A059] flex items-center justify-center text-[10px] font-bold text-[#0A0A0A] overflow-hidden">
               {user?.avatar ? (
@@ -150,21 +152,21 @@ export const TopToolbar: React.FC<{ onNewProjectClick: () => void }> = ({ onNewP
                 user?.name?.[0] || 'U'
               )}
             </div>
-            <ChevronDown className="w-3 h-3 text-[#D4CFC9]/60" />
+            <ChevronDown className="w-3 h-3 text-gray-500" />
           </button>
 
           {userMenuOpen && (
-            <div className="absolute right-0 mt-1 w-48 bg-[#111111] border border-[rgba(197,160,89,0.25)] rounded shadow-2xl py-1 z-50 text-xs animate-in fade-in zoom-in-95 duration-100">
-              <div className="px-3 py-2 border-b border-[rgba(197,160,89,0.18)]">
-                <p className="font-semibold text-[#D4CFC9]">{user?.name || 'Developer'}</p>
-                <p className="text-[10px] text-[#D4CFC9]/50 truncate">{user?.email || 'uttammaji842@gmail.com'}</p>
+            <div className="absolute right-0 mt-1 w-48 bg-[#0d1117] border border-[#30363d] rounded-xl shadow-2xl py-1 z-50">
+              <div className="px-3 py-2 border-b border-[#30363d]">
+                <p className="font-semibold text-gray-200">{user?.name || 'Developer'}</p>
+                <p className="text-[10px] text-gray-500 truncate">{user?.email || 'developer@company.com'}</p>
               </div>
               <button
                 onClick={() => {
                   setUserMenuOpen(false);
                   navigate('/profile');
                 }}
-                className="w-full text-left px-3 py-2 text-[#D4CFC9]/80 hover:bg-[#161616] hover:text-[#C5A059] flex items-center gap-2"
+                className="w-full text-left px-3 py-2 text-gray-400 hover:bg-[#161b22] hover:text-[#C5A059] flex items-center gap-2 transition-colors duration-200"
               >
                 <User className="w-3.5 h-3.5 text-[#C5A059]/70" />
                 <span>Profile</span>
@@ -174,18 +176,18 @@ export const TopToolbar: React.FC<{ onNewProjectClick: () => void }> = ({ onNewP
                   setUserMenuOpen(false);
                   navigate('/settings');
                 }}
-                className="w-full text-left px-3 py-2 text-[#D4CFC9]/80 hover:bg-[#161616] hover:text-[#C5A059] flex items-center gap-2"
+                className="w-full text-left px-3 py-2 text-gray-400 hover:bg-[#161b22] hover:text-[#C5A059] flex items-center gap-2 transition-colors duration-200"
               >
                 <SettingsIcon className="w-3.5 h-3.5 text-[#C5A059]/70" />
                 <span>Settings</span>
               </button>
-              <div className="border-t border-[rgba(197,160,89,0.18)] my-1" />
+              <div className="border-t border-[#30363d] my-1" />
               <button
                 onClick={() => {
                   setUserMenuOpen(false);
                   logout();
                 }}
-                className="w-full text-left px-3 py-2 text-red-400 hover:bg-red-950/40 flex items-center gap-2"
+                className="w-full text-left px-3 py-2 text-rose-400 hover:bg-rose-950/30 flex items-center gap-2 transition-colors duration-200"
               >
                 <LogOut className="w-3.5 h-3.5" />
                 <span>Logout</span>

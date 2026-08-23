@@ -59,7 +59,7 @@ export const AppLayout: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-[#0A0A0A] text-[#D4CFC9] flex flex-col font-sans select-none">
+    <div className="h-screen w-screen overflow-hidden bg-[#0d1117] text-gray-200 flex flex-col font-sans select-none">
       {/* Top Header Workspace Bar */}
       <TopToolbar onNewProjectClick={() => setNewProjectModalOpen(true)} />
 
@@ -75,12 +75,12 @@ export const AppLayout: React.FC = () => {
         {useUIStore.getState().sidebarOpen && (
           <div 
             onClick={() => useUIStore.getState().toggleSidebar()}
-            className="fixed inset-0 bg-black/60 backdrop-blur-xs z-30 md:hidden"
+            className="fixed inset-0 bg-black/60 z-30 md:hidden"
           />
         )}
 
         {/* Central Workspace Area */}
-        <main className="flex-1 flex flex-col min-w-0 bg-[#0A0A0A] relative overflow-hidden">
+        <main className="flex-1 flex flex-col min-w-0 bg-[#0d1117] relative overflow-hidden">
           <div className="flex-1 overflow-hidden flex flex-col relative">
             <Outlet />
           </div>
@@ -110,57 +110,57 @@ export const AppLayout: React.FC = () => {
       >
         <form onSubmit={handleCreateProject} className="space-y-4 text-xs">
           <div>
-            <label className="block text-[#C5A059] font-serif font-semibold mb-1">Project Name *</label>
+            <label className="block text-[#C5A059] font-semibold mb-1">Project Name *</label>
             <input
               type="text"
               required
               placeholder="e.g. AI-Code-Review"
               value={projName}
               onChange={(e) => setProjName(e.target.value)}
-              className="w-full bg-[#111111] border border-[rgba(197,160,89,0.25)] rounded p-2 text-[#D4CFC9] focus:outline-none focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059]"
+              className="w-full bg-[#161b22] border border-[#30363d] rounded p-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059] transition-colors duration-200"
             />
           </div>
 
           <div>
-            <label className="block text-[#C5A059] font-serif font-semibold mb-1">Description</label>
+            <label className="block text-[#C5A059] font-semibold mb-1">Description</label>
             <input
               type="text"
               placeholder="Short description of repository"
               value={projDesc}
               onChange={(e) => setProjDesc(e.target.value)}
-              className="w-full bg-[#111111] border border-[rgba(197,160,89,0.25)] rounded p-2 text-[#D4CFC9] focus:outline-none focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059]"
+              className="w-full bg-[#161b22] border border-[#30363d] rounded p-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059] transition-colors duration-200"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-[#C5A059] font-serif font-semibold mb-1">Repository Path</label>
+              <label className="block text-[#C5A059] font-semibold mb-1">Repository Path</label>
               <input
                 type="text"
                 placeholder="uttammaji/my-app"
                 value={projRepo}
                 onChange={(e) => setProjRepo(e.target.value)}
-                className="w-full bg-[#111111] border border-[rgba(197,160,89,0.25)] rounded p-2 text-[#D4CFC9] focus:outline-none focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059]"
+                className="w-full bg-[#161b22] border border-[#30363d] rounded p-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059] transition-colors duration-200"
               />
             </div>
 
             <div>
-              <label className="block text-[#C5A059] font-serif font-semibold mb-1">Default Branch</label>
+              <label className="block text-[#C5A059] font-semibold mb-1">Default Branch</label>
               <input
                 type="text"
                 value={projBranch}
                 onChange={(e) => setProjBranch(e.target.value)}
-                className="w-full bg-[#111111] border border-[rgba(197,160,89,0.25)] rounded p-2 text-[#D4CFC9] focus:outline-none focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059]"
+                className="w-full bg-[#161b22] border border-[#30363d] rounded p-2 text-gray-200 placeholder-gray-500 focus:outline-none focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059] transition-colors duration-200"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-[#C5A059] font-serif font-semibold mb-1">Primary Language</label>
+            <label className="block text-[#C5A059] font-semibold mb-1">Primary Language</label>
             <select
               value={projLang}
               onChange={(e) => setProjLang(e.target.value)}
-              className="w-full bg-[#111111] border border-[rgba(197,160,89,0.25)] rounded p-2 text-[#D4CFC9] focus:outline-none focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059]"
+              className="w-full bg-[#161b22] border border-[#30363d] rounded p-2 text-gray-200 focus:outline-none focus:border-[#C5A059] focus:ring-1 focus:ring-[#C5A059] transition-colors duration-200"
             >
               <option value="TypeScript">TypeScript</option>
               <option value="JavaScript">JavaScript</option>
@@ -171,7 +171,7 @@ export const AppLayout: React.FC = () => {
             </select>
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-[rgba(197,160,89,0.18)]">
+          <div className="flex justify-end gap-2 pt-3 border-t border-[#30363d]">
             <Button
               type="button"
               variant="secondary"

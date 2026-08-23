@@ -103,9 +103,9 @@ export const BottomPanel: React.FC = () => {
           <div className="flex flex-col gap-1">
             <div className="flex items-center gap-3 text-[11px] text-gray-500 mb-2 font-sans px-2">
               <span className="text-rose-400 font-semibold">{criticalCount} Critical/Errors</span>
-              <span>•</span>
+              <span>&#8226;</span>
               <span className="text-[#C5A059] font-semibold">{warningCount} Warnings</span>
-              <span>•</span>
+              <span>&#8226;</span>
               <span className="text-blue-400 font-semibold">{suggestionCount} Suggestions</span>
             </div>
 
@@ -188,11 +188,11 @@ export const BottomPanel: React.FC = () => {
 
         {bottomTab === 'terminal' && (
           <div className="text-xs text-gray-300 font-mono space-y-1 p-2">
-            {/* <p className="text-emerald-400">$ ai-code-review-cli v2.4.0 --daemon active</p> */}
+            <p className="text-emerald-400">$ ai-code-review-cli v2.4.0 --daemon active</p>
             <p className="text-gray-500">[info] Express API backend connected at http://localhost:3000/api</p>
             <p className="text-gray-500">[info] AST static analysis analyzer ready</p>
             <p className="text-gray-500">[logs] Security heuristics: SQLi, XSS, JWT unbound expiration filters enabled</p>
-            <p className="text-[#C5A059]">Ready for commands (type Ctrl+K to view palette)...</p>
+            <p className="text-[#C5A059]">&gt; Ready for commands (type Ctrl+K to view palette)...</p>
           </div>
         )}
 

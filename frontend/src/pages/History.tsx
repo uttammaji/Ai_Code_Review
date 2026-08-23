@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { historyApi } from '../api/history.api';
-import { ReviewRecord, IssueSeverity, ReviewFilter, SortOrder } from '../types';
+import { ReviewRecord, IssueSeverity, CodeIssue } from '../types';
 import { Badge } from '../components/common/Badge';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -12,17 +12,12 @@ import {
   Filter,
   Clock,
   Calendar,
-  ChevronDown,
-  ChevronUp,
   X,
   AlertCircle,
   CheckCircle2,
-  FileText,
   BarChart3,
   GitBranch,
-  Code2,
   Layers,
-  MoreVertical,
   RefreshCw
 } from 'lucide-react';
 import { useUIStore } from '../store/uiStore';
@@ -76,7 +71,6 @@ export const History: React.FC = () => {
       const res = await historyApi.getReviewHistory();
       setHistoryList(res.history || []);
     } catch {
-      // Fallback with mock data
       setHistoryList(getMockHistoryData());
     } finally {
       setLoading(false);
@@ -91,11 +85,16 @@ export const History: React.FC = () => {
     
     return Array.from({ length: 25 }, (_, i) => {
       const numIssues = Math.floor(Math.random() * 5);
-      const issues = Array.from({ length: numIssues }, () => ({
+      const issues: CodeIssue[] = Array.from({ length: numIssues }, () => ({
+        id: `issue-${Math.random().toString(36).substring(7)}`,
         severity: severities[Math.floor(Math.random() * severities.length)],
+        title: `Issue ${Math.random().toString(36).substring(7)}`,
+        description: `Description for issue ${i + 1}`,
         message: `Issue ${Math.random().toString(36).substring(7)}`,
         line: Math.floor(Math.random() * 100) + 1,
-        file: `src/${['index', 'utils', 'helpers', 'components', 'services'][Math.floor(Math.random() * 5)]}.${['ts', 'js', 'py', 'go'][Math.floor(Math.random() * 4)]}`
+        file: `src/${['index', 'utils', 'helpers', 'components', 'services'][Math.floor(Math.random() * 5)]}.${['ts', 'js', 'py', 'go'][Math.floor(Math.random() * 4)]}`,
+        whyItMatters: 'This issue affects code quality and security',
+        suggestedFix: 'Refactor the code to follow best practices'
       }));
 
       return {
@@ -107,7 +106,16 @@ export const History: React.FC = () => {
         overallScore: Math.floor(Math.random() * 40) + 55,
         createdAt: new Date(Date.now() - Math.random() * 1000 * 60 * 60 * 24 * 30).toISOString(),
         branch: `feature/${['auth', 'payment', 'dashboard', 'api', 'optimization'][Math.floor(Math.random() * 5)]}`,
-        commitHash: Math.random().toString(36).substring(2, 8)
+        commitHash: Math.random().toString(36).substring(2, 8),
+        scores: {
+          security: Math.floor(Math.random() * 30) + 70,
+          performance: Math.floor(Math.random() * 30) + 70,
+          maintainability: Math.floor(Math.random() * 30) + 70,
+          readability: Math.floor(Math.random() * 30) + 70,
+          bestPractices: Math.floor(Math.random() * 30) + 70
+        },
+        filesReviewedCount: Math.floor(Math.random() * 10) + 1,
+        status: 'Completed'
       };
     });
   };
@@ -116,7 +124,6 @@ export const History: React.FC = () => {
   const filteredHistory = useMemo(() => {
     let filtered = [...historyList];
 
-    // Search filter
     if (filterState.search) {
       const searchLower = filterState.search.toLowerCase();
       filtered = filtered.filter(item =>
@@ -128,7 +135,6 @@ export const History: React.FC = () => {
       );
     }
 
-    // Severity filter
     if (filterState.filter !== 'all') {
       filtered = filtered.filter(item => {
         const criticals = item.issues.filter(i => i.severity === 'CRITICAL' || i.severity === 'ERROR');
@@ -144,21 +150,18 @@ export const History: React.FC = () => {
       });
     }
 
-    // Language filter
     if (filterState.languages && filterState.languages.length > 0) {
       filtered = filtered.filter(item => 
         filterState.languages!.includes(item.language)
       );
     }
 
-    // Project filter
     if (filterState.projects && filterState.projects.length > 0) {
       filtered = filtered.filter(item => 
         filterState.projects!.includes(item.projectName)
       );
     }
 
-    // Date range filter
     if (filterState.dateRange?.start) {
       filtered = filtered.filter(item => 
         new Date(item.createdAt) >= filterState.dateRange!.start!
@@ -170,7 +173,6 @@ export const History: React.FC = () => {
       );
     }
 
-    // Sort
     switch (filterState.sort) {
       case 'oldest':
         filtered.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
@@ -193,7 +195,6 @@ export const History: React.FC = () => {
     return filtered;
   }, [historyList, filterState]);
 
-  // Dynamic stats calculation
   const stats = useMemo<HistoryStats>(() => {
     const total = historyList.length;
     const critical = historyList.filter(item =>
@@ -214,9 +215,8 @@ export const History: React.FC = () => {
     return { total, critical, warning, clean, avgScore, languages, projects };
   }, [historyList]);
 
-  // Dynamic filter options
   const filterOptions = useMemo(() => {
-    const options: Record<FilterOption, { label: string; count: number; icon: React.ReactNode }> = {
+    const options: Record<FilterOption, { label: string; count: number; icon: React.ReactNode | null }> = {
       all: { label: 'All', count: stats.total, icon: null },
       critical: { label: 'Critical', count: stats.critical, icon: <AlertCircle className="w-3 h-3 text-rose-400" /> },
       warning: { label: 'Warnings', count: stats.warning, icon: null },
@@ -242,7 +242,7 @@ export const History: React.FC = () => {
     if (selectedItems.size === 0) return;
     if (window.confirm(`Delete ${selectedItems.size} review records?`)) {
       try {
-        await Promise.all(Array.from(selectedItems).map(id => historyApi.deleteHistory(id)));
+        await Promise.all(Array.from(selectedItems).map(id => historyApi.deleteHistory(id as string)));
         setHistoryList(prev => prev.filter(item => !selectedItems.has(item.id)));
         setSelectedItems(new Set());
         addNotification({ title: 'History', message: `${selectedItems.size} records deleted`, type: 'info' });
@@ -335,7 +335,7 @@ export const History: React.FC = () => {
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             </button>
             <button
-              onClick={() => {/* Export functionality */}}
+              onClick={() => {}}
               className="p-2 bg-[#21262d] hover:bg-[#30363d] border border-[#30363d] rounded-lg transition-all text-gray-400 hover:text-white"
               title="Export"
             >
@@ -426,22 +426,26 @@ export const History: React.FC = () => {
 
           <div className="flex items-center gap-2 flex-wrap w-full lg:w-auto">
             <div className="flex items-center gap-1 bg-[#161b22] border border-[#30363d] rounded-lg p-1">
-              {Object.entries(filterOptions).map(([key, option]) => (
-                <button
-                  key={key}
-                  onClick={() => setFilterState(prev => ({ ...prev, filter: key as FilterOption }))}
-                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-1 ${filterState.filter === key
-                      ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/20'
-                      : 'text-gray-400 hover:text-white hover:bg-[#21262d]'
+              {Object.entries(filterOptions).map(([key, option]) => {
+                const optionData = option as { label: string; count: number; icon: React.ReactNode | null };
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setFilterState(prev => ({ ...prev, filter: key as FilterOption }))}
+                    className={`px-2.5 py-1 rounded-md text-xs font-medium transition-all flex items-center gap-1 ${
+                      filterState.filter === key
+                        ? 'bg-purple-600 text-white shadow-lg shadow-purple-500/20'
+                        : 'text-gray-400 hover:text-white hover:bg-[#21262d]'
                     }`}
-                >
-                  {option.icon}
-                  {option.label}
-                  <span className={`text-[9px] ${filterState.filter === key ? 'text-purple-200' : 'text-gray-500'}`}>
-                    ({option.count})
-                  </span>
-                </button>
-              ))}
+                  >
+                    {optionData.icon}
+                    {optionData.label}
+                    <span className={`text-[9px] ${filterState.filter === key ? 'text-purple-200' : 'text-gray-500'}`}>
+                      ({optionData.count})
+                    </span>
+                  </button>
+                );
+              })}
             </div>
 
             <select
@@ -470,7 +474,7 @@ export const History: React.FC = () => {
 
         {/* Advanced Filters */}
         {showAdvancedFilters && (
-          <div className="p-4 bg-[#161b22] border border-[#30363d] rounded-xl grid grid-cols-1 md:grid-cols-3 gap-4 animate-slideDown">
+          <div className="p-4 bg-[#161b22] border border-[#30363d] rounded-xl grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label className="text-xs text-gray-400 font-medium block mb-1.5">Languages</label>
               <div className="flex flex-wrap gap-1">
@@ -484,10 +488,11 @@ export const History: React.FC = () => {
                         : [...current, lang];
                       setFilterState(prev => ({ ...prev, languages: newLangs.length > 0 ? newLangs : undefined }));
                     }}
-                    className={`px-2 py-0.5 rounded-md text-xs border transition-all ${(filterState.languages || []).includes(lang)
+                    className={`px-2 py-0.5 rounded-md text-xs border transition-all ${
+                      (filterState.languages || []).includes(lang)
                         ? 'bg-purple-600 text-white border-purple-500'
                         : 'bg-[#0d1117] text-gray-400 border-[#30363d] hover:text-white'
-                      }`}
+                    }`}
                   >
                     {lang}
                   </button>
@@ -508,10 +513,11 @@ export const History: React.FC = () => {
                         : [...current, project];
                       setFilterState(prev => ({ ...prev, projects: newProjects.length > 0 ? newProjects : undefined }));
                     }}
-                    className={`px-2 py-0.5 rounded-md text-xs border transition-all ${(filterState.projects || []).includes(project)
+                    className={`px-2 py-0.5 rounded-md text-xs border transition-all ${
+                      (filterState.projects || []).includes(project)
                         ? 'bg-purple-600 text-white border-purple-500'
                         : 'bg-[#0d1117] text-gray-400 border-[#30363d] hover:text-white'
-                      }`}
+                    }`}
                   >
                     {project}
                   </button>

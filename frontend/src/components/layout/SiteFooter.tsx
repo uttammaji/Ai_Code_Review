@@ -10,9 +10,9 @@ export const SiteFooter: React.FC = () => {
       <div className="mx-auto grid w-full max-w-6xl gap-8 px-6 py-10 md:grid-cols-[1.5fr_1fr_1fr] md:px-12">
         <div className="space-y-3">
           <Link to="/" className="inline-flex items-center gap-2.5 text-white transition-colors hover:text-blue-400">
-            <span className="flex h-8 w-8 items-center justify-center rounded-md bg-gradient-to-br from-blue-600 to-indigo-600 font-mono text-xs font-bold shadow-md">
+            {/* <span className="flex h-8 w-8 items-center justify-center rounded-md bg-gradient-to-br from-blue-600 to-indigo-600 font-mono text-xs font-bold shadow-md">
               &gt;_
-            </span>
+            </span> */}
             <span className="font-semibold tracking-tight">AI CODE REVIEW</span>
           </Link>
           <p className="max-w-sm text-xs leading-5 text-gray-500">
@@ -59,7 +59,7 @@ export const SiteFooter: React.FC = () => {
       <div className="border-t border-[#30363d]">
         <div className="mx-auto flex w-full max-w-6xl flex-col gap-2 px-6 py-4 text-[11px] md:flex-row md:items-center md:justify-between md:px-12">
           <span>© {year} AI Code Review. All rights reserved.</span>
-          <span className="flex items-center gap-1">Built with <Heart className="h-3 w-3 fill-red-400 text-red-400" /> for better code.</span>
+          <span className="flex items-center gap-1">Built with <Heart className="h-3 w-3 fill-red-400 text-red-400" /> for better code.Uttam Maji</span>
         </div>
       </div>
     </footer>

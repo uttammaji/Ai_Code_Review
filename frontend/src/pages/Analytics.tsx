@@ -24,13 +24,25 @@ import {
   Users,
   Activity,
   ChevronRight,
-  Sparkles
+  CheckCircle2,
+  Eye,
+  Code2,
+  GitPullRequest,
+  FileCode,
+  Brain,
+  Target,
+  Award,
+  Flame,
+  Hash,
+  Calendar,
+  ArrowUpRight,
+  ArrowDownRight,
+  Minus
 } from 'lucide-react';
 
 export const Analytics: React.FC = () => {
   const [timeRange, setTimeRange] = useState<'7d' | '30d' | '90d'>('30d');
 
-  // Enhanced data with more realistic patterns
   const qualityTrendData = useMemo(() => [
     { week: 'Week 1', score: 78, reviews: 12, commits: 45, coverage: 65 },
     { week: 'Week 2', score: 82, reviews: 18, commits: 52, coverage: 68 },
@@ -56,7 +68,6 @@ export const Analytics: React.FC = () => {
     { day: 'Fri', PRs: 7, reviews: 10, merges: 5 },
   ], []);
 
-  // Calculate summary statistics
   const stats = useMemo(() => {
     const avgScore = Math.round(qualityTrendData.reduce((acc, d) => acc + d.score, 0) / qualityTrendData.length);
     const totalReviews = qualityTrendData.reduce((acc, d) => acc + d.reviews, 0);
@@ -71,12 +82,12 @@ export const Analytics: React.FC = () => {
   }, [issueSeverityData]);
 
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6 bg-gradient-to-b from-[#0d1117] to-[#161b22]">
-      {/* Header with interactive elements */}
+    <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-6 bg-[#0d1117]">
+      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-rose-500/20 to-rose-600/10 rounded-lg border border-rose-500/20">
+            <div className="p-2 bg-rose-500/10 rounded-lg border border-rose-500/20">
               <BarChart3 className="w-5 h-5 text-rose-400" />
             </div>
             <div>
@@ -100,10 +111,11 @@ export const Analytics: React.FC = () => {
             <button
               key={range}
               onClick={() => setTimeRange(range)}
-              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${timeRange === range
+              className={`px-3 py-1.5 text-xs font-medium rounded-md transition-all duration-200 ${
+                timeRange === range
                   ? 'bg-[#30363d] text-white shadow-sm'
                   : 'text-gray-400 hover:text-white hover:bg-[#2d333b]'
-                }`}
+              }`}
             >
               {range}
             </button>
@@ -111,9 +123,9 @@ export const Analytics: React.FC = () => {
         </div>
       </div>
 
-      {/* Enhanced Stats Grid with gradient backgrounds */}
+      {/* Stats Grid */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="group p-4 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-xl hover:border-blue-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/5">
+        <div className="group p-4 bg-[#161b22] border border-[#30363d] rounded-xl hover:border-blue-500/30 transition-all duration-300">
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-400 font-medium">Quality Score</span>
             <TrendingUp className="w-4 h-4 text-emerald-400 opacity-60 group-hover:opacity-100 transition-opacity" />
@@ -129,7 +141,7 @@ export const Analytics: React.FC = () => {
           </div>
         </div>
 
-        <div className="group p-4 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-xl hover:border-purple-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/5">
+        <div className="group p-4 bg-[#161b22] border border-[#30363d] rounded-xl hover:border-purple-500/30 transition-all duration-300">
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-400 font-medium">Code Reviews</span>
             <Users className="w-4 h-4 text-purple-400 opacity-60 group-hover:opacity-100 transition-opacity" />
@@ -140,7 +152,7 @@ export const Analytics: React.FC = () => {
           <span className="text-[10px] text-gray-500 mt-1 block">Last 6 weeks</span>
         </div>
 
-        <div className="group p-4 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-xl hover:border-emerald-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/5">
+        <div className="group p-4 bg-[#161b22] border border-[#30363d] rounded-xl hover:border-emerald-500/30 transition-all duration-300">
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-400 font-medium">Commits</span>
             <GitBranch className="w-4 h-4 text-emerald-400 opacity-60 group-hover:opacity-100 transition-opacity" />
@@ -151,7 +163,7 @@ export const Analytics: React.FC = () => {
           <span className="text-[10px] text-gray-500 mt-1 block">Total contributions</span>
         </div>
 
-        <div className="group p-4 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-xl hover:border-amber-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/5">
+        <div className="group p-4 bg-[#161b22] border border-[#30363d] rounded-xl hover:border-amber-500/30 transition-all duration-300">
           <div className="flex items-center justify-between">
             <span className="text-xs text-gray-400 font-medium">Issues Found</span>
             <AlertTriangle className="w-4 h-4 text-amber-400 opacity-60 group-hover:opacity-100 transition-opacity" />
@@ -163,10 +175,10 @@ export const Analytics: React.FC = () => {
         </div>
       </div>
 
-      {/* Charts Grid with enhanced styling */}
+      {/* Charts Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Quality Trend with Area */}
-        <div className="p-5 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-xl hover:border-blue-500/20 transition-all duration-300">
+        {/* Quality Trend */}
+        <div className="p-5 bg-[#161b22] border border-[#30363d] rounded-xl hover:border-blue-500/20 transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xs font-semibold text-gray-200 uppercase tracking-wider flex items-center gap-2">
               <div className="p-1 bg-blue-500/10 rounded-md">
@@ -231,7 +243,7 @@ export const Analytics: React.FC = () => {
         </div>
 
         {/* Issue Severity Distribution */}
-        <div className="p-5 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-xl hover:border-amber-500/20 transition-all duration-300">
+        <div className="p-5 bg-[#161b22] border border-[#30363d] rounded-xl hover:border-amber-500/20 transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xs font-semibold text-gray-200 uppercase tracking-wider flex items-center gap-2">
               <div className="p-1 bg-amber-500/10 rounded-md">
@@ -280,8 +292,8 @@ export const Analytics: React.FC = () => {
           </div>
         </div>
 
-        {/* Team Velocity - Additional chart for more insight */}
-        <div className="lg:col-span-2 p-5 bg-gradient-to-br from-[#161b22] to-[#1c2333] border border-[#30363d] rounded-xl hover:border-purple-500/20 transition-all duration-300">
+        {/* Team Velocity */}
+        <div className="lg:col-span-2 p-5 bg-[#161b22] border border-[#30363d] rounded-xl hover:border-purple-500/20 transition-all duration-300">
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-xs font-semibold text-gray-200 uppercase tracking-wider flex items-center gap-2">
               <div className="p-1 bg-purple-500/10 rounded-md">
@@ -339,7 +351,7 @@ export const Analytics: React.FC = () => {
           </span>
         </div>
         <div className="flex items-center gap-1 text-rose-400/60">
-          <Sparkles className="w-3 h-3" />
+          <Activity className="w-3 h-3" />
           <span>Powered by AI analysis</span>
         </div>
       </div>

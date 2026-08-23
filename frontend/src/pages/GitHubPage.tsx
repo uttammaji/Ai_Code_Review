@@ -277,7 +277,7 @@ export const GitHubPage: React.FC = () => {
             <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
             <div>
               <span className="font-semibold">GitHub connection issue: </span>
-              <span>{error}</span>
+              <span>{typeof error === "string" ? error : JSON.stringify(error)}</span>
               <button
                 onClick={() => fetchStatus()}
                 className="ml-2 text-rose-400 hover:text-rose-300 underline underline-offset-2 font-medium"

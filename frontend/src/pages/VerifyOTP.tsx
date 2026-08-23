@@ -168,7 +168,7 @@ export const VerifyOTP: React.FC = () => {
         {error && (
           <div className="p-4 bg-rose-950/40 border border-rose-800/60 rounded-xl text-sm text-rose-300 flex items-start gap-2">
             <AlertCircle className="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
-            <span>{error}</span>
+            <span>{typeof error === "string" ? error : JSON.stringify(error)}</span>
           </div>
         )}
 

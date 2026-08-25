@@ -181,7 +181,8 @@ export const VerifyOTP: React.FC = () => {
             {otpDigits.map((digit, idx) => (
               <input
                 key={idx}
-                ref={(el) => (inputRefs.current[idx] = el)}
+               ref={(el) => { inputRef.current = el; }}
+
                 type="text"
                 inputMode="numeric"
                 autoComplete="one-time-code"

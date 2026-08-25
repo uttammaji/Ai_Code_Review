@@ -32,6 +32,7 @@ export type SortOrder =
 
 export interface CodeIssue {
   id: string;
+  codeSnippet?: string;
 
   severity: Severity;
 

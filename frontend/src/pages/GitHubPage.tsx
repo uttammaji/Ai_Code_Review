@@ -422,7 +422,8 @@ export const GitHubPage: React.FC = () => {
                       <span className="flex items-center gap-1 hover:text-blue-400 transition-colors">
                         <GitFork className="w-3.5 h-3.5 text-blue-400" /> {repo.forks}
                       </span>
-                      {repo.private && (
+                      {(repo as any).private && (
+
                         <span className="text-[9px] bg-amber-500/10 text-amber-400 px-1.5 py-0.5 rounded-full border border-amber-500/20">
                           Private
                         </span>

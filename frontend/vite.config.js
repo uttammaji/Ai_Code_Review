@@ -3,7 +3,10 @@ import react from '@vitejs/plugin-react';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-    plugins: [react(), tailwindcss()],
+    plugins: [
+        react(),
+        tailwindcss()
+    ],
     build: {
         outDir: 'dist',
         sourcemap: false,
@@ -13,6 +16,8 @@ export default defineConfig({
                 manualChunks: {
                     'monaco': ['@monaco-editor/react', 'monaco-editor'],
                     'vendor': ['react', 'react-dom', 'react-router-dom'],
+                    'ui': ['lucide-react', 'motion', 'recharts'],
+                    'zustand': ['zustand'],
                 },
             },
         },

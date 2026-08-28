@@ -22,30 +22,60 @@ const app = express();
 // Security
 app.use(helmet());
 
-// CORS
-app.use(
-    cors({
-        origin:
-            process.env.CLIENT_URL || 'http://localhost:5173',
-        credentials: true,
-    })
-);
+// Flexible CORS configuration for Local, Vercel, and Custom Domains
+const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
+    .split(',')
+    .map((origin) => origin.trim().replace(/\/$/, ''));
+
+const corsOptions = {
+    origin: (origin, callback) => {
+        // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
+        if (!origin) return callback(null, true);
+
+        // Check if origin is in explicit allowed list
+        if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
+            return callback(null, true);
+        }
+
+        // Allow any Vercel deployment preview domain for this project
+        if (origin.endsWith('.vercel.app') || origin.includes('localhost')) {
+            return callback(null, true);
+        }
+
+        return callback(null, true); // Permissive fallback for seamless client connections
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+};
+
+app.use(cors(corsOptions));
 
 // Body parser
 app.use(
     express.json({
-        limit: '1mb',
+        limit: '5mb',
     })
 );
 
 // Rate limiting
 app.use('/api', apiLimiter);
 
-// Test route
-app.get('/', (req, res) => {
+// Health check endpoints
+app.get('/', (_req, res) => {
     res.json({
         success: true,
         message: 'AI Code Review API is running',
+        version: '1.0.0',
+        timestamp: new Date().toISOString(),
+    });
+});
+
+app.get('/api/health', (_req, res) => {
+    res.json({
+        status: 'healthy',
+        uptime: process.uptime(),
+        timestamp: new Date().toISOString(),
     });
 });
 

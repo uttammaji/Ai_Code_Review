@@ -7,10 +7,15 @@
         "dev": "vite",
         "build": "vite build",
         "preview": "vite preview",
-        "clean": "rm -rf dist"
+        "clean": "rm -rf dist",
+        "deploy": "npm run build && npm run preview",
+        "deploy:vercel": "npm run build && vercel --prod",
+        "deploy:netlify": "npm run build && netlify deploy --prod --dir=dist",
+        "deploy:gh-pages": "npm run build && gh-pages -d dist",
+        "serve": "vite preview --host 0.0.0.0 --port 4173",
+        "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
+        "format": "prettier --write ."
     },
-
-
     "dependencies": {
         "@google/genai": "^2.4.0",
         "@monaco-editor/react": "^4.7.0",
@@ -32,6 +37,11 @@
         "@vitejs/plugin-react": "^5.0.4",
         "tailwindcss": "^4.1.14",
         "typescript": "~5.8.2",
-        "vite": "^6.2.3"
+        "vite": "^6.2.3",
+        "eslint": "^8.57.0",
+        "eslint-plugin-react": "^7.34.1",
+        "eslint-plugin-react-hooks": "^4.6.2",
+        "prettier": "^3.2.5",
+        "gh-pages": "^6.1.1"
     }
 }

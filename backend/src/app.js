@@ -15,15 +15,16 @@ import { apiLimiter } from './middleware/rateLimit.middleware.js';
 
 const app = express();
 
-// Security
+// Security headers
 app.use(helmet({
-    crossOriginResourcePolicy: { policy: "cross-origin" }
+    crossOriginResourcePolicy: { policy: "cross-origin" },
+    contentSecurityPolicy: false // Disable CSP for API
 }));
 
 // Logging
 app.use(morgan('dev'));
 
-// Flexible CORS configuration
+// CORS Configuration
 const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
     .split(',')
     .map((origin) => origin.trim().replace(/\/$/, ''));
@@ -53,17 +54,25 @@ const corsOptions = {
     optionsSuccessStatus: 204
 };
 
-// Apply CORS
+// Apply CORS middleware
 app.use(cors(corsOptions));
 
-// Handle preflight requests
-app.options('*', cors(corsOptions));
+// Handle OPTIONS requests (preflight)
+app.use((req, res, next) => {
+    if (req.method === 'OPTIONS') {
+        res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
+        res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+        res.header('Access-Control-Allow-Credentials', 'true');
+        return res.sendStatus(204);
+    }
+    next();
+});
 
 // Body parser
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true }));
 
-// Rate limiting - apply to /api routes
+// Rate limiting
 app.use('/api', apiLimiter);
 
 // Health check endpoints

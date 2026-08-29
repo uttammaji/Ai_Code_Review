@@ -8,7 +8,7 @@ import {
 } from '../controllers/review.controller.js';
 
 import { authenticate } from '../middleware/auth.middleware.js';
-import { reviewLimiter } from '../middleware/rateLimit.middleware.js';
+import { apiLimiter, authLimiter, otpLimiter } from '../middleware/rateLimit.middleware.js';
 import { validateObjectId } from '../middleware/validation.middleware.js';
 
 const router = express.Router();

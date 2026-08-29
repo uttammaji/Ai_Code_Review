@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import User from '../models/User.js';
 import { generateToken } from '../utils/jwt.js';
 import { buildUserResponse } from '../utils/transformers.js';
@@ -7,21 +7,17 @@ import { buildUserResponse } from '../utils/transformers.js';
 const OTP_LIFETIME_MS = 10 * 60 * 1000;
 const includeDemoOtp = process.env.NODE_ENV !== 'production';
 
-const withDemoOtp = (payload, otp) => (
-    includeDemoOtp ? { ...payload, demoOtp: otp } : payload
-);
+// Initialize Resend
+const resend = new Resend(process.env.RESEND_API_KEY);
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL;
 
-const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASSWORD,
-    },
-});
+const withDemoOtp = (payload, otp) => (
+    includeDemoOtp ? {...payload, demoOtp: otp } : payload
+);
 
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
-const createOtpPayload = async () => {
+const createOtpPayload = async() => {
     const otp = generateOtp();
     const otpHash = await bcrypt.hash(otp, 12);
     return {
@@ -31,6 +27,7 @@ const createOtpPayload = async () => {
     };
 };
 
+// Email templates using React-like HTML
 const formatOtpEmail = (otp, purpose) => {
     const subject = purpose === 'login' ? 'Your AI Code Review login OTP' : 'Verify your AI Code Review account';
     const verb = purpose === 'login' ? 'login' : 'verification';
@@ -38,36 +35,119 @@ const formatOtpEmail = (otp, purpose) => {
     return {
         subject,
         html: `
-            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 30px; border: 1px solid #ddd; border-radius: 10px;">
-                <h2>${purpose === 'login' ? 'Login OTP' : 'Verify Your Email'}</h2>
-                <p>${purpose === 'login' ? 'Use the code below to sign in to your AI Code Review account.' : 'Thank you for registering with AI Code Review.'}</p>
-                <p>Your ${verb} OTP is:</p>
-                <div style="font-size: 32px; font-weight: bold; letter-spacing: 8px; padding: 20px; text-align: center; background: #f5f5f5; border-radius: 8px;">
-                    ${otp}
-                </div>
-                <p>This OTP will expire in <strong>10 minutes</strong>.</p>
-                <p>If you did not request this, you can ignore this email.</p>
-            </div>
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            </head>
+            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f6f9fc; margin: 0; padding: 0;">
+                <table align="center" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; padding: 20px;">
+                    <tr>
+                        <td style="background-color: #ffffff; border-radius: 12px; padding: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                            <!-- Header -->
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="text-align: center; padding-bottom: 20px;">
+                                        <h1 style="color: #c5a059; font-size: 28px; font-weight: 700; margin: 0;">
+                                            Ai_Code_review
+                                        </h1>
+                                        <p style="color: #6b7280; font-size: 14px; margin: 4px 0 0 0;">
+                                            AI Code Review Platform
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Divider -->
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="border-top: 1px solid #e5e7eb; padding: 20px 0;"></td>
+                                </tr>
+                            </table>
+
+                            <!-- Content -->
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="text-align: center;">
+                                        <h2 style="color: #1f2937; font-size: 20px; font-weight: 600; margin: 0 0 8px 0;">
+                                            ${purpose === 'login' ? '🔐 Login Verification' : '📧 Verify Your Email'}
+                                        </h2>
+                                        <p style="color: #6b7280; font-size: 14px; margin: 0 0 24px 0; line-height: 1.6;">
+                                            ${purpose === 'login' 
+                                                ? 'Use the code below to sign in to your AI Code Review account. This code is valid for 10 minutes.' 
+                                                : 'Thank you for registering with AI Code Review. Please verify your email address to get started.'
+                                            }
+                                        </p>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align: center; background-color: #f3f4f6; border-radius: 8px; padding: 24px; margin: 16px 0;">
+                                        <div style="font-size: 40px; font-weight: 700; letter-spacing: 12px; color: #c5a059; font-family: 'Courier New', monospace; background-color: #ffffff; padding: 16px 24px; border-radius: 8px; display: inline-block; border: 2px solid #c5a059;">
+                                            ${otp}
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="text-align: center; padding-top: 24px;">
+                                        <p style="color: #6b7280; font-size: 13px; margin: 0;">
+                                            ⏰ This OTP will expire in <strong style="color: #1f2937;">10 minutes</strong>
+                                        </p>
+                                        <p style="color: #9ca3af; font-size: 12px; margin: 12px 0 0 0;">
+                                            If you didn't request this, please ignore this email.
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+
+                            <!-- Footer -->
+                            <table width="100%" cellpadding="0" cellspacing="0">
+                                <tr>
+                                    <td style="border-top: 1px solid #e5e7eb; padding-top: 20px; margin-top: 20px;">
+                                        <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 0;">
+                                            © ${new Date().getFullYear()} CodeLens. All rights reserved.
+                                        </p>
+                                        <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 4px 0 0 0;">
+                                            Built with ❤️ for better code quality
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+            </html>
         `,
     };
 };
 
-const sendOtpEmail = async (email, otp, purpose = 'verification') => {
-    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASSWORD) {
+const sendOtpEmail = async(email, otp, purpose = 'verification') => {
+    if (!process.env.RESEND_API_KEY) {
+        console.warn('RESEND_API_KEY not configured. Email not sent.');
         return;
     }
 
-    const { subject, html } = formatOtpEmail(otp, purpose);
-
     try {
-        await transporter.sendMail({
-            from: `"AI Code Review" <${process.env.EMAIL_USER}>`,
+        const { subject, html } = formatOtpEmail(otp, purpose);
+
+        const { data, error } = await resend.emails.send({
+            from: FROM_EMAIL,
             to: email,
             subject,
             html,
         });
+
+        if (error) {
+            console.error('Resend error:', error);
+            throw error;
+        }
+
+        console.log(`Email sent to ${email}, ID: ${data?.id}`);
+        return { success: true, id: data ?.id };
     } catch (error) {
-        console.warn('Email delivery skipped:', error.message);
+        console.error('Email sending failed:', error.message);
+        throw error;
     }
 };
 
@@ -89,7 +169,7 @@ const issueTokenResponse = (res, user, message = 'Authentication successful') =>
     });
 };
 
-const finalizeOtpAuthentication = async (res, user, otp, message = 'Authentication successful') => {
+const finalizeOtpAuthentication = async(res, user, otp, message = 'Authentication successful') => {
     const token = generateToken(user._id);
     user.otpHash = null;
     user.otpExpiresAt = null;
@@ -106,7 +186,7 @@ const finalizeOtpAuthentication = async (res, user, otp, message = 'Authenticati
     });
 };
 
-export const registerUser = async (req, res) => {
+export const registerUser = async(req, res) => {
     try {
         const { name, email, password } = req.body;
 
@@ -168,7 +248,7 @@ export const registerUser = async (req, res) => {
     }
 };
 
-export const verifyEmailOtp = async (req, res) => {
+export const verifyEmailOtp = async(req, res) => {
     try {
         const { email, otp } = req.body;
 
@@ -196,12 +276,12 @@ export const verifyEmailOtp = async (req, res) => {
 
         return finalizeOtpAuthentication(res, user, otp, user.isVerified ? 'Login successful.' : 'Email verified successfully.');
     } catch (error) {
-        console.error('Verify OTP error:', error);
+        console.error(' Verify OTP error:', error);
         return respondWithError(res, 500, 'Server error', error.message);
     }
 };
 
-export const resendVerificationOtp = async (req, res) => {
+export const resendVerificationOtp = async(req, res) => {
     try {
         const { email } = req.body;
 
@@ -231,7 +311,7 @@ export const resendVerificationOtp = async (req, res) => {
     }
 };
 
-export const requestLoginOtp = async (req, res) => {
+export const requestLoginOtp = async(req, res) => {
     try {
         const { email } = req.body;
 
@@ -265,7 +345,7 @@ export const requestLoginOtp = async (req, res) => {
     }
 };
 
-export const verifyLoginOtp = async (req, res) => {
+export const verifyLoginOtp = async(req, res) => {
     try {
         const { email, otp } = req.body;
 
@@ -298,7 +378,7 @@ export const verifyLoginOtp = async (req, res) => {
     }
 };
 
-export const loginUser = async (req, res) => {
+export const loginUser = async(req, res) => {
     try {
         const { email, password } = req.body;
 
@@ -343,7 +423,7 @@ export const loginUser = async (req, res) => {
     }
 };
 
-export const getMe = async (req, res) => {
+export const getMe = async(req, res) => {
     try {
         const user = await User.findById(req.user._id).select('-password');
 

@@ -138,7 +138,6 @@ export const registerUser = async (req, res) => {
         return res.status(201).json({
             success: true,
             message: 'Verification code sent to your email.',
-            demoOtp: otpData.otp, // Include for testing
             email: email
         });
     } catch (error) {
@@ -289,7 +288,6 @@ export const resendVerificationOtp = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: 'OTP resent successfully.',
-            demoOtp: otpData.otp
         });
     } catch (error) {
         console.error('Resend OTP error:', error);
@@ -361,7 +359,6 @@ export const loginUser = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: 'Login OTP sent to your email.',
-            demoOtp: otpData.otp,
             email: email
         });
     } catch (error) {

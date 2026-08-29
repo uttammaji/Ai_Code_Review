@@ -7,13 +7,10 @@ import {
   Mail,
   Lock,
   ArrowRight,
-  ShieldCheck,
-  CheckCircle2,
   AlertCircle,
   Eye,
   EyeOff,
-  Users,
-  Fingerprint
+  Users
 } from 'lucide-react';
 
 export const Register = () => {
@@ -62,8 +59,8 @@ export const Register = () => {
       setError('Please enter a valid developer email');
       return;
     }
-    if (password.length < 8) {
-      setError('Password must be at least 8 characters long');
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters long');
       return;
     }
     if (password !== confirmPassword) {
@@ -86,7 +83,6 @@ export const Register = () => {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Header */}
       <div>
         <div className="flex items-center gap-3 mb-1.5">
           <div className="p-2 bg-blue-500/10 rounded-xl border border-blue-500/20">
@@ -96,8 +92,7 @@ export const Register = () => {
             Create your account
           </h2>
         </div>
-        <p className="text-sm text-gray-400 flex items-center gap-2">
-          {/* <Fingerprint className="w-3.5 h-3.5 text-blue-400" /> */}
+        <p className="text-sm text-gray-400">
           Join developers auditing code with Senior AI heuristics
         </p>
       </div>
@@ -110,7 +105,6 @@ export const Register = () => {
           </div>
         )}
 
-        {/* Full Name */}
         <div>
           <label className="block text-xs font-bold text-gray-300 mb-1.5 uppercase tracking-wider">
             Full Name <span className="text-rose-400">*</span>
@@ -129,7 +123,6 @@ export const Register = () => {
           </div>
         </div>
 
-        {/* Email */}
         <div>
           <label className="block text-xs font-bold text-gray-300 mb-1.5 uppercase tracking-wider">
             Email Address <span className="text-rose-400">*</span>
@@ -147,7 +140,6 @@ export const Register = () => {
           </div>
         </div>
 
-        {/* Password Fields */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
           <div>
             <label className="block text-xs font-bold text-gray-300 mb-1.5 uppercase tracking-wider">
@@ -157,7 +149,7 @@ export const Register = () => {
               <Lock className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-500" />
               <input
                 type={showPassword ? 'text' : 'password'}
-                placeholder="Min 8 characters"
+                placeholder="Min 6 characters"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full bg-[#161b22] border border-white/10 rounded-xl pl-10 pr-10 py-2.5 text-sm text-gray-100 placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-colors"
@@ -196,21 +188,17 @@ export const Register = () => {
           </div>
         </div>
 
-        {/* Password Strength Indicator */}
         {password && (
           <div className="space-y-1">
-            <div className="flex items-center gap-2">
-              <div className="flex-1 h-1.5 bg-black/40 rounded-full overflow-hidden">
-                <div
-                  className={`h-full transition-all duration-300 ${getStrengthColor()}`}
-                  style={{ width: `${passwordStrength}%` }}
-                />
-              </div>
+            <div className="flex-1 h-1.5 bg-black/40 rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-300 ${getStrengthColor()}`}
+                style={{ width: `${passwordStrength}%` }}
+              />
             </div>
           </div>
         )}
 
-        {/* Register Button */}
         <Button
           type="submit"
           loading={loading}
@@ -221,20 +209,6 @@ export const Register = () => {
         </Button>
       </form>
 
-      {/* Security Badges */}
-      {/* <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-gray-500 pt-2 border-t border-white/10">
-        <span className="flex items-center gap-1.5">
-          <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
-          256-bit encryption
-        </span>
-        <span className="w-px h-3 bg-white/10" />
-        <span className="flex items-center gap-1.5">
-          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-          SOC2 Compliant
-        </span>
-      </div> */}
-
-      {/* Login Link */}
       <p className="text-center text-xs text-gray-400">
         Already have an account?{' '}
         <Link to="/login" className="text-blue-400 hover:text-blue-300 font-bold hover:underline transition-colors">

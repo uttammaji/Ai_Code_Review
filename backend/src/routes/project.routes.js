@@ -9,7 +9,7 @@ import {
 } from '../controllers/project.controller.js';
 
 import { protect } from '../middleware/auth.middleware.js';
-import { validateObjectId } from '../middleware/validation.middleware.js';
+import validateObjectId from '../middleware/validation.middleware.js';
 
 const router = express.Router();
 

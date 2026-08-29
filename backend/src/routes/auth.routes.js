@@ -4,7 +4,7 @@ import {
     registerUser,
     verifyEmailOtp,
     resendVerificationOtp,
-    requestLoginOtp,
+    loginUser,
     verifyLoginOtp,
     getMe
 } from '../controllers/auth.controller.js';
@@ -17,8 +17,8 @@ router.post('/register', registerUser);
 router.post('/verify-otp', verifyEmailOtp);
 router.post('/resend-otp', resendVerificationOtp);
 
-// Login flow - only email + OTP, no password
-router.post('/request-login-otp', requestLoginOtp);
+// Login flow - only email, sends OTP
+router.post('/login', loginUser);
 router.post('/verify-login-otp', verifyLoginOtp);
 
 // Protected routes

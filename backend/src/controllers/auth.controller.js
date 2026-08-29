@@ -27,7 +27,6 @@ export const registerUser = async function(req, res) {
 
         console.log('Register attempt:', { name: name, email: email });
 
-        // Validation
         if (!name || !email || !password) {
             return res.status(400).json({
                 success: false,
@@ -50,7 +49,6 @@ export const registerUser = async function(req, res) {
             });
         }
 
-        // Check existing user
         let user = await User.findOne({ email: email });
 
         const otpData = await createOtpPayload();
@@ -66,14 +64,12 @@ export const registerUser = async function(req, res) {
                 });
             }
 
-            // Update existing unverified user
             user.name = name;
             user.password = await bcrypt.hash(password, 12);
             user.otpHash = otpHash;
             user.otpExpiresAt = otpExpiresAt;
             await user.save();
         } else {
-            // Create new user
             user = new User({
                 name: name,
                 email: email,
@@ -85,7 +81,6 @@ export const registerUser = async function(req, res) {
             await user.save();
         }
 
-        // Send OTP in background
         sendOTPEmail(email, otp).catch(function(err) {
             console.warn('Email sending failed in background:', err.message);
         });
@@ -148,13 +143,11 @@ export const verifyEmailOtp = async function(req, res) {
             });
         }
 
-        // Mark as verified
         user.isVerified = true;
         user.otpHash = null;
         user.otpExpiresAt = null;
         await user.save();
 
-        // Generate token
         const token = jwt.sign({ userId: user._id, email: user.email },
             JWT_SECRET, { expiresIn: '7d' }
         );
@@ -233,10 +226,12 @@ export const resendVerificationOtp = async function(req, res) {
     }
 };
 
-// Request Login OTP - No password needed
-export const requestLoginOtp = async function(req, res) {
+// Login User - OTP Only (No Password)
+export const loginUser = async function(req, res) {
     try {
         const { email } = req.body;
+
+        console.log('Login attempt:', { email: email });
 
         if (!email) {
             return res.status(400).json({
@@ -249,7 +244,7 @@ export const requestLoginOtp = async function(req, res) {
         if (!user) {
             return res.status(404).json({
                 success: false,
-                message: 'User not found'
+                message: 'User not found. Please register first.'
             });
         }
 
@@ -260,6 +255,7 @@ export const requestLoginOtp = async function(req, res) {
             });
         }
 
+        // Generate and send OTP for login
         const otpData = await createOtpPayload();
         const otp = otpData.otp;
         const otpHash = otpData.otpHash;
@@ -276,18 +272,19 @@ export const requestLoginOtp = async function(req, res) {
         return res.status(200).json({
             success: true,
             message: 'Login OTP sent to your email.',
-            demoOtp: otp
+            demoOtp: otp,
+            email: email
         });
     } catch (error) {
-        console.error('Login OTP request error:', error);
+        console.error('Login error:', error);
         return res.status(500).json({
             success: false,
-            message: 'Failed to send login OTP. Please try again.'
+            message: 'Login failed. Please try again.'
         });
     }
 };
 
-// Verify Login OTP - No password needed
+// Verify Login OTP - Complete Login
 export const verifyLoginOtp = async function(req, res) {
     try {
         const { email, otp } = req.body;

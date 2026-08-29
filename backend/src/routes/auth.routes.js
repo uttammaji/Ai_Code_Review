@@ -7,7 +7,10 @@ import {
     loginUser,
     verifyLoginOtp,
     getMe,
-    requestLoginOtp
+    requestLoginOtp,
+    logoutUser,
+    updateProfile,
+    deleteAccount
 } from '../controllers/auth.controller.js';
 import { protect } from '../middleware/auth.middleware.js';
 
@@ -20,16 +23,13 @@ router.post('/resend-otp', resendVerificationOtp);
 
 // Login flow
 router.post('/login', loginUser);
-router.post('/login-otp', requestLoginOtp || loginUser);
+router.post('/login-otp', requestLoginOtp);
 router.post('/verify-login-otp', verifyLoginOtp);
-router.post('/logout', (_req, res) => {
-    res.status(200).json({ 
-        success: true, 
-        message: 'Logged out successfully' 
-    });
-});
+router.post('/logout', logoutUser);
 
 // Protected routes
 router.get('/me', protect, getMe);
+router.put('/profile', protect, updateProfile);
+router.delete('/account', protect, deleteAccount);
 
 export default router;

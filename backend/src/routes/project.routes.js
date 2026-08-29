@@ -9,7 +9,7 @@ import {
 } from '../controllers/project.controller.js';
 
 import { protect } from '../middleware/auth.middleware.js';
-import validateObjectId from '../middleware/validation.middleware.js';
+import { validateObjectId } from '../middleware/validation.middleware.js';
 
 const router = express.Router();
 
@@ -20,12 +20,12 @@ router.post('/', protect, createProject);
 router.get('/', protect, getUserProjects);
 
 // Get single project
-router.get('/:id', protect, validateObjectId(), getOneProject);
+router.get('/:id', protect, validateObjectId, getOneProject);
 
 // Update project
-router.put('/:id', protect, validateObjectId(), updateProject);
+router.put('/:id', protect, validateObjectId, updateProject);
 
 // Delete project
-router.delete('/:id', protect, validateObjectId(), deleteProject);
+router.delete('/:id', protect, validateObjectId, deleteProject);
 
 export default router;

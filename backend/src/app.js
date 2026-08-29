@@ -14,6 +14,7 @@ import { notFound, errorHandler } from './middleware/error.middleware.js';
 import { apiLimiter } from './middleware/rateLimit.middleware.js';
 
 const app = express();
+app.set('trust proxy', 1);
 
 // Security headers
 app.use(helmet({

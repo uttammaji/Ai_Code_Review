@@ -1,32 +1,31 @@
 import React, { useState } from 'react';
 import { useAuthStore } from '../store/authStore';
 import {
-  User,
   Mail,
   ShieldCheck,
   CheckCircle2,
-  AlertCircle,
   Activity,
   Star,
   LogOut,
-  Save,
   Check,
-  Copy,
-  FolderGit2
+  Copy
 } from 'lucide-react';
 import { Badge } from '../components/common/Badge';
 import { Button } from '../components/common/Button';
+import { useNavigate } from 'react-router-dom';
 
 export const Profile = () => {
-  const { user, logout } = useAuthStore();
+  const { user, logout, updateProfile } = useAuthStore();
   const [isEditing, setIsEditing] = useState(false);
   const [name, setName] = useState(user?.name || 'Developer');
   const [copied, setCopied] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const navigate = useNavigate();
 
   const stats = [
     { label: 'Audits Run', value: '48', icon: Activity, color: 'blue' },
     { label: 'Avg. Score', value: '92%', icon: Star, color: 'emerald' },
-    { label: 'Issues Found', value: '142', icon: AlertCircle, color: 'amber' },
+    { label: 'Issues Found', value: '142', icon: CheckCircle2, color: 'amber' },
     { label: 'Auto-Fixed Diffs', value: '89', icon: CheckCircle2, color: 'purple' },
   ];
 
@@ -34,6 +33,23 @@ export const Profile = () => {
     navigator.clipboard.writeText(user?.id || 'usr_dev_1');
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login');
+  };
+
+  const handleSaveProfile = async () => {
+    try {
+      setSaving(true);
+      await updateProfile({ name });
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Failed to update profile:', error);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -77,7 +93,7 @@ export const Profile = () => {
             variant="danger"
             size="sm"
             icon={<LogOut className="w-4 h-4" />}
-            onClick={logout}
+            onClick={handleLogout}
           >
             Sign Out
           </Button>
@@ -105,7 +121,25 @@ export const Profile = () => {
       {/* Account Details & Security Status */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="p-6 bg-[#161b22]/70 border border-white/10 rounded-3xl space-y-4">
-          <h3 className="font-bold text-sm text-white">Account Details</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="font-bold text-sm text-white">Account Details</h3>
+            {!isEditing ? (
+              <button
+                onClick={() => setIsEditing(true)}
+                className="text-xs text-blue-400 hover:text-blue-300"
+              >
+                Edit
+              </button>
+            ) : (
+              <button
+                onClick={handleSaveProfile}
+                disabled={saving}
+                className="text-xs text-emerald-400 hover:text-emerald-300"
+              >
+                {saving ? 'Saving...' : 'Save'}
+              </button>
+            )}
+          </div>
           <div className="space-y-3 text-xs">
             <div>
               <label className="text-gray-400 block mb-1">Full Name</label>
@@ -113,7 +147,8 @@ export const Profile = () => {
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                className="w-full bg-[#0d1117] border border-white/10 rounded-xl p-2.5 text-gray-200 text-xs focus:outline-none focus:border-blue-500"
+                disabled={!isEditing}
+                className="w-full bg-[#0d1117] border border-white/10 rounded-xl p-2.5 text-gray-200 text-xs focus:outline-none focus:border-blue-500 disabled:opacity-50"
               />
             </div>
             <div>

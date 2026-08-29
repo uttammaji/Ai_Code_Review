@@ -1,41 +1,18 @@
+// backend/src/routes/history.routes.js
 import express from 'express';
-
 import {
-    getReviewHistory,
+    getHistory,
     getHistoryById,
-    deleteHistory,
+    getHistoryByProject,
 } from '../controllers/history.controller.js';
-
 import { protect } from '../middleware/auth.middleware.js';
 import { validateObjectId } from '../middleware/validation.middleware.js';
 
 const router = express.Router();
 
-
-// Get all review history
-router.get(
-    '/',
-    protect,
-    getReviewHistory
-);
-
-
-// Get single history
-router.get(
-    '/:id',
-    protect,
-    validateObjectId(),
-    getHistoryById
-);
-
-
-// Delete history
-router.delete(
-    '/:id',
-    protect,
-    validateObjectId(),
-    deleteHistory
-);
-
+// ✅ Fix: Remove the () from validateObjectId
+router.get('/', protect, getHistory);
+router.get('/:id', protect, validateObjectId, getHistoryById);
+router.get('/project/:projectId', protect, validateObjectId, getHistoryByProject);
 
 export default router;

@@ -1,8 +1,9 @@
 // backend/src/middleware/validation.middleware.js
 import mongoose from 'mongoose';
 
+// This is the middleware function - it should NOT return another function
 export const validateObjectId = (req, res, next) => {
-    // req.params is available when used as middleware
+    // req should be defined when used as middleware
     const id = req.params.id;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {

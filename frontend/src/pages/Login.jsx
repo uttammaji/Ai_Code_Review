@@ -27,7 +27,7 @@ export const Login = () => {
   const inputRefs = useRef([]);
   const timerRef = useRef(null);
 
-  const { login, verifyOTP, loading } = useAuthStore();
+  const { loginWithPassword, loginWithOTP, verifyLoginOTP, loading } = useAuthStore();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
@@ -60,17 +60,20 @@ export const Login = () => {
 
     try {
       setError('');
-      if (usePassword && password) {
-        await login(email, password);
+      
+      if (usePassword) {
+        // Login with password
+        if (!password) {
+          setError('Please enter your password');
+          return;
+        }
+        await loginWithPassword(email, password);
         navigate('/dashboard');
         return;
       }
 
-      const res = await login(email);
-      if (res && res.success) {
-        navigate('/dashboard');
-        return;
-      }
+      // Login with OTP
+      await loginWithOTP(email);
       setShowOTP(true);
       setTimeLeft(300);
       setResendDisabled(true);
@@ -87,7 +90,7 @@ export const Login = () => {
   const handleResendOTP = async () => {
     try {
       setError('');
-      await login(email);
+      await loginWithOTP(email);
       setTimeLeft(300);
       setResendDisabled(true);
       setOtp(['', '', '', '', '', '']);
@@ -107,7 +110,7 @@ export const Login = () => {
     try {
       setError('');
       setIsVerifying(true);
-      await verifyOTP(email, otpString);
+      await verifyLoginOTP(email, otpString);
       navigate('/dashboard');
     } catch (err) {
       setError(err.response?.data?.message || 'Invalid verification code. Please try again.');
@@ -186,7 +189,7 @@ export const Login = () => {
         <h2 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
           {showOTP ? (
             <>
-              {/* <Fingerprint className="w-5 h-5 text-blue-400" /> */}
+              <Fingerprint className="w-5 h-5 text-blue-400" />
               <span>Verify your identity</span>
             </>
           ) : (
@@ -251,7 +254,11 @@ export const Login = () => {
           <div className="flex items-center justify-between text-xs">
             <button
               type="button"
-              onClick={() => setUsePassword(!usePassword)}
+              onClick={() => {
+                setUsePassword(!usePassword);
+                setPassword('');
+                setError('');
+              }}
               className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
             >
               {usePassword ? 'Use One-Time Code (OTP)' : 'Sign in with Password instead'}
@@ -269,7 +276,6 @@ export const Login = () => {
         </form>
       ) : (
         <div className="space-y-6">
-          {/* OTP Inputs */}
           <div>
             <label className="block text-xs font-bold text-gray-300 mb-3 text-center uppercase tracking-wider">
               Enter 6-digit verification code
@@ -297,7 +303,6 @@ export const Login = () => {
             </div>
           </div>
 
-          {/* Timer and Resend */}
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-2 text-gray-400">
               <Clock className={`w-3.5 h-3.5 ${timeLeft < 60 ? 'text-amber-400' : ''}`} />
@@ -320,7 +325,6 @@ export const Login = () => {
             </button>
           </div>
 
-          {/* Action Buttons */}
           <div className="space-y-3">
             <Button
               onClick={handleVerifyOTP}

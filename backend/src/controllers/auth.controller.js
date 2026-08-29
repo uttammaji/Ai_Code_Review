@@ -6,34 +6,36 @@ import { sendOTPEmail } from '../services/email.service.js';
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
 const OTP_LIFETIME_MS = 10 * 60 * 1000;
 
-const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
+const generateOtp = function() {
+    return Math.floor(100000 + Math.random() * 900000).toString();
+};
 
-const createOtpPayload = async () => {
+const createOtpPayload = async function() {
     const otp = generateOtp();
     const otpHash = await bcrypt.hash(otp, 12);
     return {
-        otp,
-        otpHash,
-        otpExpiresAt: new Date(Date.now() + OTP_LIFETIME_MS),
+        otp: otp,
+        otpHash: otpHash,
+        otpExpiresAt: new Date(Date.now() + OTP_LIFETIME_MS)
     };
 };
 
-// Register User
-export const registerUser = async (req, res) => {
+// Register User - Name, Email, Password required + OTP verification
+export const registerUser = async function(req, res) {
     try {
         const { name, email, password } = req.body;
 
-        console.log('📝 Register attempt:', { name, email });
+        console.log('Register attempt:', { name: name, email: email });
 
         // Validation
-        if (!name || !email) {
+        if (!name || !email || !password) {
             return res.status(400).json({
                 success: false,
-                message: 'Name and email are required'
+                message: 'Name, email and password are required'
             });
         }
 
-        if (password && password.length < 6) {
+        if (password.length < 6) {
             return res.status(400).json({
                 success: false,
                 message: 'Password must be at least 6 characters'
@@ -49,9 +51,12 @@ export const registerUser = async (req, res) => {
         }
 
         // Check existing user
-        let user = await User.findOne({ email });
+        let user = await User.findOne({ email: email });
 
-        const { otp, otpHash, otpExpiresAt } = await createOtpPayload();
+        const otpData = await createOtpPayload();
+        const otp = otpData.otp;
+        const otpHash = otpData.otpHash;
+        const otpExpiresAt = otpData.otpExpiresAt;
 
         if (user) {
             if (user.isVerified) {
@@ -63,38 +68,36 @@ export const registerUser = async (req, res) => {
 
             // Update existing unverified user
             user.name = name;
-            if (password) {
-                user.password = await bcrypt.hash(password, 12);
-            }
+            user.password = await bcrypt.hash(password, 12);
             user.otpHash = otpHash;
             user.otpExpiresAt = otpExpiresAt;
             await user.save();
         } else {
             // Create new user
             user = new User({
-                name,
-                email,
-                password: password ? await bcrypt.hash(password, 12) : undefined,
+                name: name,
+                email: email,
+                password: await bcrypt.hash(password, 12),
                 isVerified: false,
-                otpHash,
-                otpExpiresAt,
+                otpHash: otpHash,
+                otpExpiresAt: otpExpiresAt
             });
             await user.save();
         }
 
-        // Send OTP - Don't await, let it run in background
-        sendOTPEmail(email, otp).catch(err => {
-            console.warn('⚠️ Email sending failed in background:', err.message);
+        // Send OTP in background
+        sendOTPEmail(email, otp).catch(function(err) {
+            console.warn('Email sending failed in background:', err.message);
         });
 
         return res.status(201).json({
             success: true,
             message: 'Verification code sent to your email.',
-            demoOtp: otp, // For development
-            email: email,
+            demoOtp: otp,
+            email: email
         });
     } catch (error) {
-        console.error('❌ Register error:', error);
+        console.error('Register error:', error);
         return res.status(500).json({
             success: false,
             message: 'Registration failed. Please try again.',
@@ -103,8 +106,8 @@ export const registerUser = async (req, res) => {
     }
 };
 
-// Verify OTP
-export const verifyEmailOtp = async (req, res) => {
+// Verify OTP for Registration
+export const verifyEmailOtp = async function(req, res) {
     try {
         const { email, otp } = req.body;
 
@@ -115,7 +118,7 @@ export const verifyEmailOtp = async (req, res) => {
             });
         }
 
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email: email });
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -152,25 +155,23 @@ export const verifyEmailOtp = async (req, res) => {
         await user.save();
 
         // Generate token
-        const token = jwt.sign(
-            { userId: user._id, email: user.email },
-            JWT_SECRET,
-            { expiresIn: '7d' }
+        const token = jwt.sign({ userId: user._id, email: user.email },
+            JWT_SECRET, { expiresIn: '7d' }
         );
 
         return res.status(200).json({
             success: true,
             message: 'Email verified successfully.',
-            token,
+            token: token,
             user: {
                 id: user._id,
                 name: user.name,
                 email: user.email,
-                isVerified: user.isVerified,
+                isVerified: user.isVerified
             }
         });
     } catch (error) {
-        console.error('❌ Verify OTP error:', error);
+        console.error('Verify OTP error:', error);
         return res.status(500).json({
             success: false,
             message: 'OTP verification failed. Please try again.'
@@ -178,8 +179,8 @@ export const verifyEmailOtp = async (req, res) => {
     }
 };
 
-// Resend OTP
-export const resendVerificationOtp = async (req, res) => {
+// Resend OTP for Registration
+export const resendVerificationOtp = async function(req, res) {
     try {
         const { email } = req.body;
 
@@ -190,7 +191,7 @@ export const resendVerificationOtp = async (req, res) => {
             });
         }
 
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email: email });
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -198,22 +199,33 @@ export const resendVerificationOtp = async (req, res) => {
             });
         }
 
-        const { otp, otpHash, otpExpiresAt } = await createOtpPayload();
+        if (user.isVerified) {
+            return res.status(400).json({
+                success: false,
+                message: 'User is already verified. Please login.'
+            });
+        }
+
+        const otpData = await createOtpPayload();
+        const otp = otpData.otp;
+        const otpHash = otpData.otpHash;
+        const otpExpiresAt = otpData.otpExpiresAt;
+
         user.otpHash = otpHash;
         user.otpExpiresAt = otpExpiresAt;
         await user.save();
 
-        sendOTPEmail(email, otp).catch(err => {
-            console.warn('⚠️ Email sending failed:', err.message);
+        sendOTPEmail(email, otp).catch(function(err) {
+            console.warn('Email sending failed:', err.message);
         });
 
         return res.status(200).json({
             success: true,
             message: 'OTP resent successfully.',
-            demoOtp: otp,
+            demoOtp: otp
         });
     } catch (error) {
-        console.error('❌ Resend OTP error:', error);
+        console.error('Resend OTP error:', error);
         return res.status(500).json({
             success: false,
             message: 'Failed to resend OTP. Please try again.'
@@ -221,10 +233,10 @@ export const resendVerificationOtp = async (req, res) => {
     }
 };
 
-// Login User
-export const loginUser = async (req, res) => {
+// Request Login OTP - No password needed
+export const requestLoginOtp = async function(req, res) {
     try {
-        const { email, password } = req.body;
+        const { email } = req.body;
 
         if (!email) {
             return res.status(400).json({
@@ -233,7 +245,7 @@ export const loginUser = async (req, res) => {
             });
         }
 
-        const user = await User.findOne({ email });
+        const user = await User.findOne({ email: email });
         if (!user) {
             return res.status(404).json({
                 success: false,
@@ -248,50 +260,105 @@ export const loginUser = async (req, res) => {
             });
         }
 
-        // If no password provided or user doesn't have password
-        if (!password || !user.password) {
-            const { otp, otpHash, otpExpiresAt } = await createOtpPayload();
-            user.otpHash = otpHash;
-            user.otpExpiresAt = otpExpiresAt;
-            await user.save();
-            sendOTPEmail(email, otp, 'login').catch(err => {
-                console.warn('⚠️ Email sending failed:', err.message);
-            });
-            return res.status(200).json({
-                success: true,
-                message: 'Login OTP sent to your email.',
-                demoOtp: otp,
-            });
-        }
+        const otpData = await createOtpPayload();
+        const otp = otpData.otp;
+        const otpHash = otpData.otpHash;
+        const otpExpiresAt = otpData.otpExpiresAt;
 
-        // Check password
-        const isPasswordCorrect = await bcrypt.compare(password, user.password);
-        if (!isPasswordCorrect) {
-            return res.status(401).json({
+        user.otpHash = otpHash;
+        user.otpExpiresAt = otpExpiresAt;
+        await user.save();
+
+        sendOTPEmail(email, otp, 'login').catch(function(err) {
+            console.warn('Email sending failed:', err.message);
+        });
+
+        return res.status(200).json({
+            success: true,
+            message: 'Login OTP sent to your email.',
+            demoOtp: otp
+        });
+    } catch (error) {
+        console.error('Login OTP request error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to send login OTP. Please try again.'
+        });
+    }
+};
+
+// Verify Login OTP - No password needed
+export const verifyLoginOtp = async function(req, res) {
+    try {
+        const { email, otp } = req.body;
+
+        if (!email || !otp) {
+            return res.status(400).json({
                 success: false,
-                message: 'Invalid credentials'
+                message: 'Email and OTP are required'
             });
         }
 
-        const token = jwt.sign(
-            { userId: user._id, email: user.email },
-            JWT_SECRET,
-            { expiresIn: '7d' }
+        const user = await User.findOne({ email: email });
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
+        }
+
+        if (!user.isVerified) {
+            return res.status(403).json({
+                success: false,
+                message: 'Please verify your email first.'
+            });
+        }
+
+        if (!user.otpHash || !user.otpExpiresAt) {
+            return res.status(400).json({
+                success: false,
+                message: 'No OTP found. Please request a new login code.'
+            });
+        }
+
+        if (new Date() > user.otpExpiresAt) {
+            return res.status(400).json({
+                success: false,
+                message: 'OTP expired. Please request a new login code.'
+            });
+        }
+
+        const isOtpValid = await bcrypt.compare(otp, user.otpHash);
+        if (!isOtpValid) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid OTP. Please try again.'
+            });
+        }
+
+        // Clear OTP after successful login
+        user.otpHash = null;
+        user.otpExpiresAt = null;
+        await user.save();
+
+        // Generate token
+        const token = jwt.sign({ userId: user._id, email: user.email },
+            JWT_SECRET, { expiresIn: '7d' }
         );
 
         return res.status(200).json({
             success: true,
             message: 'Login successful',
-            token,
+            token: token,
             user: {
                 id: user._id,
                 name: user.name,
                 email: user.email,
-                isVerified: user.isVerified,
+                isVerified: user.isVerified
             }
         });
     } catch (error) {
-        console.error('❌ Login error:', error);
+        console.error('Verify login OTP error:', error);
         return res.status(500).json({
             success: false,
             message: 'Login failed. Please try again.'
@@ -300,7 +367,7 @@ export const loginUser = async (req, res) => {
 };
 
 // Get Current User
-export const getMe = async (req, res) => {
+export const getMe = async function(req, res) {
     try {
         const user = await User.findById(req.user._id).select('-password -otpHash -otpExpiresAt');
 
@@ -317,11 +384,11 @@ export const getMe = async (req, res) => {
                 id: user._id,
                 name: user.name,
                 email: user.email,
-                isVerified: user.isVerified,
+                isVerified: user.isVerified
             }
         });
     } catch (error) {
-        console.error('❌ Get user error:', error);
+        console.error('Get user error:', error);
         return res.status(500).json({
             success: false,
             message: 'Failed to get user profile'

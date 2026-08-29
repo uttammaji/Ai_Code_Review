@@ -1,67 +1,48 @@
 import mongoose from 'mongoose';
 
-const userSchema = new mongoose.Schema(
-    {
-        name: {
-            type: String,
-            required: true,
-            trim: true,
-        },
-
-        email: {
-            type: String,
-            required: true,
-            unique: true,
-            lowercase: true,
-            trim: true,
-        },
-
-        password: {
-            type: String,
-            default: null,
-        },
-
-        role: {
-            type: String,
-            enum: ['user', 'admin'],
-            default: 'user',
-        },
-
-        plan: {
-            type: String,
-            enum: ['free', 'pro'],
-            default: 'free',
-        },
-
-        reviewCount: {
-            type: Number,
-            default: 0,
-        },
-
-        avatar: {
-            type: String,
-            default: '',
-        },
-        isVerified: {
-            type: Boolean,
-            required: true,
-            default: false,
-        },
-
-        otpHash: {
-            type: String,
-            default: null,
-        },
-
-        otpExpiresAt: {
-            type: Date,
-            default: null,
-        },
+const userSchema = new mongoose.Schema({
+    name: {
+        type: String,
+        required: true,
+        trim: true,
     },
-    {
-        timestamps: true,
-    }
-);
+    email: {
+        type: String,
+        required: true,
+        unique: true,
+        lowercase: true,
+        trim: true,
+    },
+    password: {
+        type: String,
+        select: false,
+    },
+    isVerified: {
+        type: Boolean,
+        default: false,
+    },
+    otpHash: {
+        type: String,
+        select: false,
+    },
+    otpExpiresAt: {
+        type: Date,
+        select: false,
+    },
+    createdAt: {
+        type: Date,
+        default: Date.now,
+    },
+    updatedAt: {
+        type: Date,
+        default: Date.now,
+    },
+});
+
+userSchema.pre('save', function(next) {
+    this.updatedAt = Date.now();
+    next();
+});
 
 const User = mongoose.model('User', userSchema);
 

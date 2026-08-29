@@ -1,23 +1,14 @@
 import bcrypt from 'bcryptjs';
-import { Resend } from 'resend';
+import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
-import { generateToken } from '../utils/jwt.js';
-import { buildUserResponse } from '../utils/transformers.js';
+import { sendOTPEmail } from '../services/email.service.js';
 
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
 const OTP_LIFETIME_MS = 10 * 60 * 1000;
-const includeDemoOtp = process.env.NODE_ENV !== 'production';
-
-// Initialize Resend
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL;
-
-const withDemoOtp = (payload, otp) => (
-    includeDemoOtp ? {...payload, demoOtp: otp } : payload
-);
 
 const generateOtp = () => Math.floor(100000 + Math.random() * 900000).toString();
 
-const createOtpPayload = async() => {
+const createOtpPayload = async () => {
     const otp = generateOtp();
     const otpHash = await bcrypt.hash(otp, 12);
     return {
@@ -27,271 +18,184 @@ const createOtpPayload = async() => {
     };
 };
 
-// Email templates using React-like HTML
-const formatOtpEmail = (otp, purpose) => {
-    const subject = purpose === 'login' ? 'Your AI Code Review login OTP' : 'Verify your AI Code Review account';
-    const verb = purpose === 'login' ? 'login' : 'verification';
-
-    return {
-        subject,
-        html: `
-            <!DOCTYPE html>
-            <html>
-            <head>
-                <meta charset="utf-8">
-                <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            </head>
-            <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f6f9fc; margin: 0; padding: 0;">
-                <table align="center" width="100%" cellpadding="0" cellspacing="0" style="max-width: 600px; margin: 0 auto; padding: 20px;">
-                    <tr>
-                        <td style="background-color: #ffffff; border-radius: 12px; padding: 40px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
-                            <!-- Header -->
-                            <table width="100%" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td style="text-align: center; padding-bottom: 20px;">
-                                        <h1 style="color: #c5a059; font-size: 28px; font-weight: 700; margin: 0;">
-                                            Ai_Code_review
-                                        </h1>
-                                        <p style="color: #6b7280; font-size: 14px; margin: 4px 0 0 0;">
-                                            AI Code Review Platform
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <!-- Divider -->
-                            <table width="100%" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td style="border-top: 1px solid #e5e7eb; padding: 20px 0;"></td>
-                                </tr>
-                            </table>
-
-                            <!-- Content -->
-                            <table width="100%" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td style="text-align: center;">
-                                        <h2 style="color: #1f2937; font-size: 20px; font-weight: 600; margin: 0 0 8px 0;">
-                                            ${purpose === 'login' ? '🔐 Login Verification' : '📧 Verify Your Email'}
-                                        </h2>
-                                        <p style="color: #6b7280; font-size: 14px; margin: 0 0 24px 0; line-height: 1.6;">
-                                            ${purpose === 'login' 
-                                                ? 'Use the code below to sign in to your AI Code Review account. This code is valid for 10 minutes.' 
-                                                : 'Thank you for registering with AI Code Review. Please verify your email address to get started.'
-                                            }
-                                        </p>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align: center; background-color: #f3f4f6; border-radius: 8px; padding: 24px; margin: 16px 0;">
-                                        <div style="font-size: 40px; font-weight: 700; letter-spacing: 12px; color: #c5a059; font-family: 'Courier New', monospace; background-color: #ffffff; padding: 16px 24px; border-radius: 8px; display: inline-block; border: 2px solid #c5a059;">
-                                            ${otp}
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td style="text-align: center; padding-top: 24px;">
-                                        <p style="color: #6b7280; font-size: 13px; margin: 0;">
-                                            ⏰ This OTP will expire in <strong style="color: #1f2937;">10 minutes</strong>
-                                        </p>
-                                        <p style="color: #9ca3af; font-size: 12px; margin: 12px 0 0 0;">
-                                            If you didn't request this, please ignore this email.
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <!-- Footer -->
-                            <table width="100%" cellpadding="0" cellspacing="0">
-                                <tr>
-                                    <td style="border-top: 1px solid #e5e7eb; padding-top: 20px; margin-top: 20px;">
-                                        <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 0;">
-                                            © ${new Date().getFullYear()} CodeLens. All rights reserved.
-                                        </p>
-                                        <p style="color: #9ca3af; font-size: 12px; text-align: center; margin: 4px 0 0 0;">
-                                            Built with ❤️ for better code quality
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-                        </td>
-                    </tr>
-                </table>
-            </body>
-            </html>
-        `,
-    };
-};
-
-const sendOtpEmail = async(email, otp, purpose = 'verification') => {
-    if (!process.env.RESEND_API_KEY) {
-        console.warn('RESEND_API_KEY not configured. Email not sent.');
-        return;
-    }
-
-    try {
-        const { subject, html } = formatOtpEmail(otp, purpose);
-
-        const { data, error } = await resend.emails.send({
-            from: FROM_EMAIL,
-            to: email,
-            subject,
-            html,
-        });
-
-        if (error) {
-            console.error('Resend error:', error);
-            throw error;
-        }
-
-        console.log(`Email sent to ${email}, ID: ${data?.id}`);
-        return { success: true, id: data ?.id };
-    } catch (error) {
-        console.error('Email sending failed:', error.message);
-        throw error;
-    }
-};
-
-const respondWithError = (res, status, message, error = null) => {
-    return res.status(status).json({
-        success: false,
-        message,
-        error: error || message,
-    });
-};
-
-const issueTokenResponse = (res, user, message = 'Authentication successful') => {
-    const token = generateToken(user._id);
-    return res.status(200).json({
-        success: true,
-        message,
-        token,
-        user: buildUserResponse(user),
-    });
-};
-
-const finalizeOtpAuthentication = async(res, user, otp, message = 'Authentication successful') => {
-    const token = generateToken(user._id);
-    user.otpHash = null;
-    user.otpExpiresAt = null;
-    if (!user.isVerified) {
-        user.isVerified = true;
-    }
-    await user.save();
-
-    return res.status(200).json({
-        success: true,
-        message,
-        token,
-        user: buildUserResponse(user),
-    });
-};
-
-export const registerUser = async(req, res) => {
+// Register User
+export const registerUser = async (req, res) => {
     try {
         const { name, email, password } = req.body;
 
+        console.log('📝 Register attempt:', { name, email });
+
+        // Validation
         if (!name || !email) {
-            return respondWithError(res, 400, 'Name and email are required');
+            return res.status(400).json({
+                success: false,
+                message: 'Name and email are required'
+            });
         }
 
         if (password && password.length < 6) {
-            return respondWithError(res, 400, 'Password must be at least 6 characters');
+            return res.status(400).json({
+                success: false,
+                message: 'Password must be at least 6 characters'
+            });
         }
 
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         if (!emailRegex.test(email)) {
-            return respondWithError(res, 400, 'Invalid email format');
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid email format'
+            });
         }
 
-        const existingUser = await User.findOne({ email });
+        // Check existing user
+        let user = await User.findOne({ email });
+
         const { otp, otpHash, otpExpiresAt } = await createOtpPayload();
-        const hashedPassword = password ? await bcrypt.hash(password, 12) : undefined;
 
-        if (existingUser) {
-            if (existingUser.isVerified) {
-                return respondWithError(res, 409, 'User already exists');
+        if (user) {
+            if (user.isVerified) {
+                return res.status(409).json({
+                    success: false,
+                    message: 'User already exists. Please login.'
+                });
             }
 
-            existingUser.name = name;
-            if (hashedPassword) {
-                existingUser.password = hashedPassword;
+            // Update existing unverified user
+            user.name = name;
+            if (password) {
+                user.password = await bcrypt.hash(password, 12);
             }
-            existingUser.otpHash = otpHash;
-            existingUser.otpExpiresAt = otpExpiresAt;
-            await existingUser.save();
-
-            await sendOtpEmail(email, otp);
-            return res.status(200).json(withDemoOtp({
-                success: true,
-                message: 'Verification code sent to your email.',
-            }, otp));
+            user.otpHash = otpHash;
+            user.otpExpiresAt = otpExpiresAt;
+            await user.save();
+        } else {
+            // Create new user
+            user = new User({
+                name,
+                email,
+                password: password ? await bcrypt.hash(password, 12) : undefined,
+                isVerified: false,
+                otpHash,
+                otpExpiresAt,
+            });
+            await user.save();
         }
 
-        const user = await User.create({
-            name,
-            email,
-            ...(hashedPassword ? { password: hashedPassword } : {}),
-            isVerified: false,
-            otpHash,
-            otpExpiresAt,
+        // Send OTP - Don't await, let it run in background
+        sendOTPEmail(email, otp).catch(err => {
+            console.warn('⚠️ Email sending failed in background:', err.message);
         });
 
-        await sendOtpEmail(email, otp);
-
-        return res.status(201).json(withDemoOtp({
+        return res.status(201).json({
             success: true,
             message: 'Verification code sent to your email.',
-        }, otp));
+            demoOtp: otp, // For development
+            email: email,
+        });
     } catch (error) {
-        console.error('Register error:', error);
-        return respondWithError(res, 500, 'Server error', error.message);
+        console.error('❌ Register error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Registration failed. Please try again.',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
+        });
     }
 };
 
-export const verifyEmailOtp = async(req, res) => {
+// Verify OTP
+export const verifyEmailOtp = async (req, res) => {
     try {
         const { email, otp } = req.body;
 
         if (!email || !otp) {
-            return respondWithError(res, 400, 'Email and OTP are required');
+            return res.status(400).json({
+                success: false,
+                message: 'Email and OTP are required'
+            });
         }
 
         const user = await User.findOne({ email });
         if (!user) {
-            return respondWithError(res, 404, 'User not found');
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
         }
 
         if (!user.otpHash || !user.otpExpiresAt) {
-            return respondWithError(res, 400, 'No OTP found. Please request a new verification code.');
+            return res.status(400).json({
+                success: false,
+                message: 'No OTP found. Please request a new verification code.'
+            });
         }
 
         if (new Date() > user.otpExpiresAt) {
-            return respondWithError(res, 400, 'OTP expired. Please request a new verification code.');
+            return res.status(400).json({
+                success: false,
+                message: 'OTP expired. Please request a new verification code.'
+            });
         }
 
         const isOtpValid = await bcrypt.compare(otp, user.otpHash);
         if (!isOtpValid) {
-            return respondWithError(res, 400, 'Invalid OTP. Please try again.');
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid OTP. Please try again.'
+            });
         }
 
-        return finalizeOtpAuthentication(res, user, otp, user.isVerified ? 'Login successful.' : 'Email verified successfully.');
+        // Mark as verified
+        user.isVerified = true;
+        user.otpHash = null;
+        user.otpExpiresAt = null;
+        await user.save();
+
+        // Generate token
+        const token = jwt.sign(
+            { userId: user._id, email: user.email },
+            JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: 'Email verified successfully.',
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                isVerified: user.isVerified,
+            }
+        });
     } catch (error) {
-        console.error(' Verify OTP error:', error);
-        return respondWithError(res, 500, 'Server error', error.message);
+        console.error('❌ Verify OTP error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'OTP verification failed. Please try again.'
+        });
     }
 };
 
-export const resendVerificationOtp = async(req, res) => {
+// Resend OTP
+export const resendVerificationOtp = async (req, res) => {
     try {
         const { email } = req.body;
 
         if (!email) {
-            return respondWithError(res, 400, 'Email is required');
+            return res.status(400).json({
+                success: false,
+                message: 'Email is required'
+            });
         }
 
         const user = await User.findOne({ email });
         if (!user) {
-            return respondWithError(res, 404, 'User not found');
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
         }
 
         const { otp, otpHash, otpExpiresAt } = await createOtpPayload();
@@ -299,144 +203,128 @@ export const resendVerificationOtp = async(req, res) => {
         user.otpExpiresAt = otpExpiresAt;
         await user.save();
 
-        await sendOtpEmail(email, otp);
+        sendOTPEmail(email, otp).catch(err => {
+            console.warn('⚠️ Email sending failed:', err.message);
+        });
 
-        return res.status(200).json(withDemoOtp({
+        return res.status(200).json({
             success: true,
-            message: 'Verification OTP resent to your email.',
-        }, otp));
+            message: 'OTP resent successfully.',
+            demoOtp: otp,
+        });
     } catch (error) {
-        console.error('Resend OTP error:', error);
-        return respondWithError(res, 500, 'Server error', error.message);
+        console.error('❌ Resend OTP error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to resend OTP. Please try again.'
+        });
     }
 };
 
-export const requestLoginOtp = async(req, res) => {
-    try {
-        const { email } = req.body;
-
-        if (!email) {
-            return respondWithError(res, 400, 'Email is required');
-        }
-
-        const user = await User.findOne({ email });
-        if (!user) {
-            return respondWithError(res, 404, 'User not found');
-        }
-
-        if (!user.isVerified) {
-            return respondWithError(res, 400, 'Please verify your email before requesting login OTP.');
-        }
-
-        const { otp, otpHash, otpExpiresAt } = await createOtpPayload();
-        user.otpHash = otpHash;
-        user.otpExpiresAt = otpExpiresAt;
-        await user.save();
-
-        await sendOtpEmail(email, otp, 'login');
-
-        return res.status(200).json(withDemoOtp({
-            success: true,
-            message: 'Login OTP sent to your email.',
-        }, otp));
-    } catch (error) {
-        console.error('Login OTP request error:', error);
-        return respondWithError(res, 500, 'Server error', error.message);
-    }
-};
-
-export const verifyLoginOtp = async(req, res) => {
-    try {
-        const { email, otp } = req.body;
-
-        if (!email || !otp) {
-            return respondWithError(res, 400, 'Email and OTP are required');
-        }
-
-        const user = await User.findOne({ email });
-        if (!user) {
-            return respondWithError(res, 404, 'User not found');
-        }
-
-        if (!user.otpHash || !user.otpExpiresAt) {
-            return respondWithError(res, 400, 'No OTP found. Please request a new login code.');
-        }
-
-        if (new Date() > user.otpExpiresAt) {
-            return respondWithError(res, 400, 'OTP expired. Please request a new login code.');
-        }
-
-        const isOtpValid = await bcrypt.compare(otp, user.otpHash);
-        if (!isOtpValid) {
-            return respondWithError(res, 400, 'Invalid OTP. Please try again.');
-        }
-
-        return finalizeOtpAuthentication(res, user, otp, 'Login successful.');
-    } catch (error) {
-        console.error('Verify login OTP error:', error);
-        return respondWithError(res, 500, 'Server error', error.message);
-    }
-};
-
-export const loginUser = async(req, res) => {
+// Login User
+export const loginUser = async (req, res) => {
     try {
         const { email, password } = req.body;
 
         if (!email) {
-            return respondWithError(res, 400, 'Email is required');
+            return res.status(400).json({
+                success: false,
+                message: 'Email is required'
+            });
         }
 
         const user = await User.findOne({ email });
         if (!user) {
-            return respondWithError(res, 404, 'User not found');
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
         }
 
         if (!user.isVerified) {
-            return respondWithError(res, 403, 'Please verify your email before logging in.');
+            return res.status(403).json({
+                success: false,
+                message: 'Please verify your email before logging in.'
+            });
         }
 
-        if (!password) {
+        // If no password provided or user doesn't have password
+        if (!password || !user.password) {
             const { otp, otpHash, otpExpiresAt } = await createOtpPayload();
             user.otpHash = otpHash;
             user.otpExpiresAt = otpExpiresAt;
             await user.save();
-            await sendOtpEmail(email, otp, 'login');
-            return res.status(200).json(withDemoOtp({
+            sendOTPEmail(email, otp, 'login').catch(err => {
+                console.warn('⚠️ Email sending failed:', err.message);
+            });
+            return res.status(200).json({
                 success: true,
                 message: 'Login OTP sent to your email.',
-            }, otp));
+                demoOtp: otp,
+            });
         }
 
-        if (!user.password) {
-            return respondWithError(res, 401, 'Please use email verification to sign in.');
-        }
-
+        // Check password
         const isPasswordCorrect = await bcrypt.compare(password, user.password);
         if (!isPasswordCorrect) {
-            return respondWithError(res, 401, 'Invalid email or password');
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid credentials'
+            });
         }
 
-        return issueTokenResponse(res, user, 'Login successful');
+        const token = jwt.sign(
+            { userId: user._id, email: user.email },
+            JWT_SECRET,
+            { expiresIn: '7d' }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: 'Login successful',
+            token,
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                isVerified: user.isVerified,
+            }
+        });
     } catch (error) {
-        console.error('Login error:', error);
-        return respondWithError(res, 500, 'Server error', error.message);
+        console.error('❌ Login error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Login failed. Please try again.'
+        });
     }
 };
 
-export const getMe = async(req, res) => {
+// Get Current User
+export const getMe = async (req, res) => {
     try {
-        const user = await User.findById(req.user._id).select('-password');
+        const user = await User.findById(req.user._id).select('-password -otpHash -otpExpiresAt');
 
         if (!user) {
-            return respondWithError(res, 404, 'User not found');
+            return res.status(404).json({
+                success: false,
+                message: 'User not found'
+            });
         }
 
         return res.status(200).json({
             success: true,
-            user: buildUserResponse(user),
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                isVerified: user.isVerified,
+            }
         });
     } catch (error) {
-        console.error('Get current user error:', error);
-        return respondWithError(res, 500, 'Server error', error.message);
+        console.error('❌ Get user error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Failed to get user profile'
+        });
     }
 };

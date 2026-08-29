@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
+import morgan from 'morgan';
 
 import authRoutes from './routes/auth.routes.js';
 import projectRoutes from './routes/project.routes.js';
@@ -22,27 +23,24 @@ const app = express();
 // Security
 app.use(helmet());
 
-// Flexible CORS configuration for Local, Vercel, and Custom Domains
+// Logging
+app.use(morgan('dev'));
+
+// Flexible CORS configuration
 const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
     .split(',')
     .map((origin) => origin.trim().replace(/\/$/, ''));
 
 const corsOptions = {
     origin: (origin, callback) => {
-        // Allow requests with no origin (e.g. mobile apps, curl, server-to-server)
         if (!origin) return callback(null, true);
-
-        // Check if origin is in explicit allowed list
         if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
             return callback(null, true);
         }
-
-        // Allow any Vercel deployment preview domain for this project
         if (origin.endsWith('.vercel.app') || origin.includes('localhost')) {
             return callback(null, true);
         }
-
-        return callback(null, true); // Permissive fallback for seamless client connections
+        return callback(null, true);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],

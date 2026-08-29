@@ -3,7 +3,7 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import { sendOTPEmail } from '../services/email.service.js';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
+const JWT_SECRET = process.env.JWT_SECRET;
 const OTP_LIFETIME_MS = 10 * 60 * 1000;
 
 const generateOtp = function() {
@@ -81,9 +81,13 @@ export const registerUser = async function(req, res) {
             await user.save();
         }
 
-        sendOTPEmail(email, otp).catch(function(err) {
-            console.warn('Email sending failed in background:', err.message);
-        });
+        // Try to send email but don't fail if it doesn't work
+        try {
+            const emailResult = await sendOTPEmail(email, otp);
+            console.log('Email sending result:', emailResult);
+        } catch (emailError) {
+            console.warn('Email sending failed in background:', emailError.message);
+        }
 
         return res.status(201).json({
             success: true,
@@ -208,9 +212,13 @@ export const resendVerificationOtp = async function(req, res) {
         user.otpExpiresAt = otpExpiresAt;
         await user.save();
 
-        sendOTPEmail(email, otp).catch(function(err) {
-            console.warn('Email sending failed:', err.message);
-        });
+        // Try to send email but don't fail if it doesn't work
+        try {
+            await sendOTPEmail(email, otp);
+            console.log('OTP email resent successfully');
+        } catch (emailError) {
+            console.warn('Email sending failed:', emailError.message);
+        }
 
         return res.status(200).json({
             success: true,
@@ -265,9 +273,13 @@ export const loginUser = async function(req, res) {
         user.otpExpiresAt = otpExpiresAt;
         await user.save();
 
-        sendOTPEmail(email, otp, 'login').catch(function(err) {
-            console.warn('Email sending failed:', err.message);
-        });
+        // Try to send email but don't fail if it doesn't work
+        try {
+            const emailResult = await sendOTPEmail(email, otp, 'login');
+            console.log('Login OTP email result:', emailResult);
+        } catch (emailError) {
+            console.warn('Email sending failed:', emailError.message);
+        }
 
         return res.status(200).json({
             success: true,
@@ -279,7 +291,8 @@ export const loginUser = async function(req, res) {
         console.error('Login error:', error);
         return res.status(500).json({
             success: false,
-            message: 'Login failed. Please try again.'
+            message: 'Login failed. Please try again.',
+            error: error.message
         });
     }
 };
@@ -358,7 +371,8 @@ export const verifyLoginOtp = async function(req, res) {
         console.error('Verify login OTP error:', error);
         return res.status(500).json({
             success: false,
-            message: 'Login failed. Please try again.'
+            message: 'Login failed. Please try again.',
+            error: error.message
         });
     }
 };
@@ -392,3 +406,6 @@ export const getMe = async function(req, res) {
         });
     }
 };
+
+// Request Login OTP (alias for loginUser)
+export const requestLoginOtp = loginUser;

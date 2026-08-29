@@ -195,4 +195,52 @@ export const VerifyOTP = () => {
                 value={digit}
                 onChange={(e) => handleDigitChange(idx, e.target.value)}
                 onKeyDown={(e) => handleKeyDown(idx, e)}
-                className={`w-12 h-14 text-center text-2xl font-bold font-mono bg-[#161b22] border rounded-xl text-white focus:outline-none focus:ring-2
+                className={`w-12 h-14 text-center text-2xl font-bold font-mono bg-[#161b22] border rounded-xl text-white focus:outline-none focus:ring-2 transition-all ${
+                  digit
+                    ? 'border-blue-500/60 bg-blue-500/10'
+                    : 'border-white/10 focus:border-blue-500'
+                } ${error ? 'border-rose-500/60' : ''}`}
+              />
+            ))}
+          </div>
+        </div>
+
+        <Button
+          type="submit"
+          loading={isVerifying}
+          className="w-full justify-center py-2.5 text-sm font-semibold"
+          icon={<ArrowRight className="w-4 h-4" />}
+        >
+          <span>Verify & Open Workspace</span>
+        </Button>
+      </form>
+
+      <div className="flex items-center justify-between pt-4 border-t border-white/10">
+        <div className="flex items-center gap-2 text-xs">
+          <Clock className={`w-4 h-4 ${isTimerExpired ? 'text-rose-400' : 'text-gray-500'}`} />
+          <span className="text-gray-400">
+            Expires in{' '}
+            <span className={`font-mono font-bold ${isTimerExpired ? 'text-rose-400' : 'text-blue-400'}`}>
+              {formatTimer(timerSeconds)}
+            </span>
+          </span>
+        </div>
+
+        <button
+          onClick={handleResend}
+          disabled={!isTimerExpired || isResending}
+          className={`text-xs font-semibold transition-all flex items-center gap-1.5 px-3 py-1.5 rounded-lg ${
+            isTimerExpired && !isResending
+              ? 'text-blue-400 hover:text-blue-300 hover:bg-blue-500/10 cursor-pointer'
+              : 'text-gray-500 cursor-not-allowed'
+          }`}
+        >
+          <RefreshCw className={`w-3.5 h-3.5 ${isResending ? 'animate-spin' : ''}`} />
+          <span>{isResending ? 'Sending...' : 'Resend code'}</span>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default VerifyOTP;

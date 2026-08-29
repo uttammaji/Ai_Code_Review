@@ -4,7 +4,7 @@ import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 import { sendOTPEmail } from '../services/email.service.js';
 
-const JWT_SECRET = process.env.JWT_SECRET ;
+const JWT_SECRET = process.env.JWT_SECRET;
 const OTP_LIFETIME_MS = 10 * 60 * 1000; // 10 minutes
 
 // Generate 6-digit OTP
@@ -89,7 +89,7 @@ export const registerUser = async (req, res) => {
             });
         }
 
-        // Check if user exists (including hidden fields)
+        // Check if user exists
         let user = await User.findByEmail(email);
 
         // Generate OTP
@@ -127,10 +127,10 @@ export const registerUser = async (req, res) => {
             console.log('Created new user');
         }
 
-        // Try to send OTP email (don't fail if email fails)
+        // Try to send OTP email
         try {
-            const emailResult = await sendOTPEmail(email, otpData.otp, 'verification');
-            console.log('Email sending result:', emailResult);
+            await sendOTPEmail(email, otpData.otp, 'verification');
+            console.log('Verification email sent');
         } catch (emailError) {
             console.warn('Email sending failed:', emailError.message);
         }
@@ -159,7 +159,7 @@ export const registerUser = async (req, res) => {
     }
 };
 
-// ==================== VERIFY EMAIL OTP ====================
+// ==================== VERIFY EMAIL OTP (Registration) ====================
 export const verifyEmailOtp = async (req, res) => {
     try {
         const { email, otp } = req.body;
@@ -251,7 +251,6 @@ export const resendVerificationOtp = async (req, res) => {
             });
         }
 
-        // Find user with OTP fields
         const user = await User.findByEmail(email);
         
         if (!user) {
@@ -261,7 +260,6 @@ export const resendVerificationOtp = async (req, res) => {
             });
         }
 
-        // Check if already verified
         if (user.isVerified) {
             return res.status(400).json({
                 success: false,
@@ -269,15 +267,12 @@ export const resendVerificationOtp = async (req, res) => {
             });
         }
 
-        // Generate new OTP
         const otpData = await createOtpPayload();
 
-        // Update user with new OTP
         user.otpHash = otpData.otpHash;
         user.otpExpiresAt = otpData.otpExpiresAt;
         await user.save();
 
-        // Try to send email
         try {
             await sendOTPEmail(email, otpData.otp, 'verification');
             console.log('OTP email resent successfully');
@@ -287,7 +282,7 @@ export const resendVerificationOtp = async (req, res) => {
 
         return res.status(200).json({
             success: true,
-            message: 'OTP resent successfully.',
+            message: 'OTP resent successfully.'
         });
     } catch (error) {
         console.error('Resend OTP error:', error);
@@ -299,12 +294,86 @@ export const resendVerificationOtp = async (req, res) => {
     }
 };
 
-// ==================== LOGIN USER (OTP ONLY) ====================
+// ==================== LOGIN WITH PASSWORD ====================
+// POST /api/auth/login
+// Body: { email, password }
 export const loginUser = async (req, res) => {
+    try {
+        const { email, password } = req.body;
+
+        console.log('Password login attempt:', { email });
+
+        // Validate input
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: 'Email and password are required'
+            });
+        }
+
+        // Validate email format
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Invalid email format'
+            });
+        }
+
+        // Find user with password field
+        const user = await User.findByEmail(email);
+        
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: 'User not found. Please register first.'
+            });
+        }
+
+        // Check if user is verified
+        if (!user.isVerified) {
+            return res.status(403).json({
+                success: false,
+                message: 'Please verify your email before logging in.'
+            });
+        }
+
+        // Verify password
+        const isPasswordValid = await user.comparePassword(password);
+        if (!isPasswordValid) {
+            return res.status(401).json({
+                success: false,
+                message: 'Invalid email or password.'
+            });
+        }
+
+        // Generate token
+        const token = generateToken(user);
+
+        return res.status(200).json({
+            success: true,
+            message: 'Login successful',
+            token,
+            user: createUserResponse(user)
+        });
+    } catch (error) {
+        console.error('Password login error:', error);
+        return res.status(500).json({
+            success: false,
+            message: 'Login failed. Please try again.',
+            error: error.message
+        });
+    }
+};
+
+// ==================== REQUEST LOGIN OTP ====================
+// POST /api/auth/login-otp
+// Body: { email }
+export const requestLoginOtp = async (req, res) => {
     try {
         const { email } = req.body;
 
-        console.log('Login attempt:', { email });
+        console.log('OTP login request:', { email });
 
         if (!email) {
             return res.status(400).json({
@@ -322,7 +391,7 @@ export const loginUser = async (req, res) => {
             });
         }
 
-        // Find user with OTP fields
+        // Find user
         const user = await User.findByEmail(email);
         
         if (!user) {
@@ -350,8 +419,8 @@ export const loginUser = async (req, res) => {
 
         // Try to send email
         try {
-            const emailResult = await sendOTPEmail(email, otpData.otp, 'login');
-            console.log('Login OTP email result:', emailResult);
+            await sendOTPEmail(email, otpData.otp, 'login');
+            console.log('Login OTP email sent');
         } catch (emailError) {
             console.warn('Email sending failed:', emailError.message);
         }
@@ -362,16 +431,18 @@ export const loginUser = async (req, res) => {
             email: email
         });
     } catch (error) {
-        console.error('Login error:', error);
+        console.error('Request login OTP error:', error);
         return res.status(500).json({
             success: false,
-            message: 'Login failed. Please try again.',
+            message: 'Failed to send login OTP. Please try again.',
             error: error.message
         });
     }
 };
 
 // ==================== VERIFY LOGIN OTP ====================
+// POST /api/auth/verify-login-otp
+// Body: { email, otp }
 export const verifyLoginOtp = async (req, res) => {
     try {
         const { email, otp } = req.body;
@@ -453,7 +524,6 @@ export const verifyLoginOtp = async (req, res) => {
 // ==================== GET CURRENT USER ====================
 export const getMe = async (req, res) => {
     try {
-        // req.user is set by auth middleware
         const user = await User.findById(req.user._id);
         
         if (!user) {
@@ -477,14 +547,9 @@ export const getMe = async (req, res) => {
     }
 };
 
-// ==================== REQUEST LOGIN OTP (ALIAS) ====================
-export const requestLoginOtp = loginUser;
-
 // ==================== LOGOUT ====================
 export const logoutUser = async (req, res) => {
     try {
-        // Since we're using JWT tokens, logout is handled client-side
-        // by removing the token. This endpoint is just for consistency.
         return res.status(200).json({
             success: true,
             message: 'Logged out successfully'
@@ -513,7 +578,6 @@ export const updateProfile = async (req, res) => {
             });
         }
 
-        // Update fields
         if (name) user.name = name.trim();
         if (avatar) user.avatar = avatar;
         

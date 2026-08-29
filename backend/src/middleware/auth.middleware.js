@@ -1,48 +1,39 @@
-import { verifyToken } from '../utils/jwt.js';
+import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
-export const protect = async (req, res, next) => {
+const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
+
+export const authenticate = async (req, res, next) => {
     try {
-        let token;
-
-        // Check Authorization header
-        if (
-            req.headers.authorization &&
-            req.headers.authorization.startsWith('Bearer ')
-        ) {
-            token = req.headers.authorization.split(' ')[1];
-        }
-
-        if (!token) {
+        const authHeader = req.headers.authorization;
+        
+        if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return res.status(401).json({
                 success: false,
-                message: 'Not authorized. Please login first.',
+                message: 'Unauthorized - No token provided'
             });
         }
 
-        // Verify token
-        const decoded = verifyToken(token);
-
-        // Find user
-        const user = await User.findById(decoded.userId).select('-password');
-
+        const token = authHeader.split(' ')[1];
+        const decoded = jwt.verify(token, JWT_SECRET);
+        
+        const user = await User.findById(decoded.userId).select('-password -otpHash -otpExpiresAt');
         if (!user) {
             return res.status(401).json({
                 success: false,
-                message: 'User no longer exists.',
+                message: 'Unauthorized - User not found'
             });
         }
 
-        // Attach user to request
         req.user = user;
-
         next();
     } catch (error) {
-        console.error('Authentication error:', error.message);
-
+        console.error('Auth middleware error:', error);
         return res.status(401).json({
             success: false,
-            message: 'Invalid or expired token.',
+            message: 'Unauthorized - Invalid token'
         });
     }
 };
+
+export default authenticate;

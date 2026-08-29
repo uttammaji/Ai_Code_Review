@@ -1,12 +1,13 @@
+// backend/src/middleware/auth.middleware.js
 import jwt from 'jsonwebtoken';
 import User from '../models/User.js';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
 
-export const authenticate = async(req, res, next) => {
+// Main authentication logic
+const auth = async(req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
-
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return res.status(401).json({
                 success: false,
@@ -16,8 +17,8 @@ export const authenticate = async(req, res, next) => {
 
         const token = authHeader.split(' ')[1];
         const decoded = jwt.verify(token, JWT_SECRET);
-
         const user = await User.findById(decoded.userId).select('-password -otpHash -otpExpiresAt');
+
         if (!user) {
             return res.status(401).json({
                 success: false,
@@ -36,4 +37,7 @@ export const authenticate = async(req, res, next) => {
     }
 };
 
-export default authenticate;
+// Export as both 'authenticate' and 'protect' for compatibility
+export const authenticate = auth;
+export const protect = auth;
+export default auth;

@@ -1,4 +1,3 @@
-
 import express from 'express';
 
 import {
@@ -7,7 +6,7 @@ import {
     deleteHistory,
 } from '../controllers/history.controller.js';
 
-import { protect } from '../middleware/auth.middleware.js';
+import { authenticate } from '../middleware/auth.middleware.js';
 import { validateObjectId } from '../middleware/validation.middleware.js';
 
 const router = express.Router();

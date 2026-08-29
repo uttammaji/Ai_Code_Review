@@ -5,9 +5,10 @@ import User from '../models/User.js';
 const JWT_SECRET = process.env.JWT_SECRET || 'your_jwt_secret_key_here';
 
 // Main authentication logic
-const auth = async(req, res, next) => {
+const auth = async (req, res, next) => {
     try {
         const authHeader = req.headers.authorization;
+        
         if (!authHeader || !authHeader.startsWith('Bearer ')) {
             return res.status(401).json({
                 success: false,
@@ -16,7 +17,20 @@ const auth = async(req, res, next) => {
         }
 
         const token = authHeader.split(' ')[1];
-        const decoded = jwt.verify(token, JWT_SECRET);
+        
+        // Verify token
+        let decoded;
+        try {
+            decoded = jwt.verify(token, JWT_SECRET);
+        } catch (jwtError) {
+            console.error('JWT verification failed:', jwtError.message);
+            return res.status(401).json({
+                success: false,
+                message: 'Unauthorized - Invalid token'
+            });
+        }
+
+        // Get user from database
         const user = await User.findById(decoded.userId).select('-password -otpHash -otpExpiresAt');
 
         if (!user) {
@@ -26,13 +40,25 @@ const auth = async(req, res, next) => {
             });
         }
 
+        // Attach user to request object
         req.user = user;
-        next();
+        
+        // Call next middleware
+        if (typeof next === 'function') {
+            next();
+        } else {
+            console.error('next is not a function in auth middleware');
+            return res.status(500).json({
+                success: false,
+                message: 'Server error in authentication middleware'
+            });
+        }
     } catch (error) {
         console.error('Auth middleware error:', error);
-        return res.status(401).json({
+        return res.status(500).json({
             success: false,
-            message: 'Unauthorized - Invalid token'
+            message: 'Server error in authentication',
+            error: error.message
         });
     }
 };

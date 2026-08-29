@@ -1,3 +1,4 @@
+// backend/src/app.js
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -9,19 +10,15 @@ import reviewRoutes from './routes/review.routes.js';
 import historyRoutes from './routes/history.routes.js';
 import githubRoutes from './routes/github.routes.js';
 
-import {
-    notFound,
-    errorHandler,
-} from './middleware/error.middleware.js';
-
-import {
-    apiLimiter,
-} from './middleware/rateLimit.middleware.js';
+import { notFound, errorHandler } from './middleware/error.middleware.js';
+import { apiLimiter } from './middleware/rateLimit.middleware.js';
 
 const app = express();
 
 // Security
-app.use(helmet());
+app.use(helmet({
+    crossOriginResourcePolicy: { policy: "cross-origin" }
+}));
 
 // Logging
 app.use(morgan('dev'));
@@ -33,30 +30,40 @@ const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
 
 const corsOptions = {
     origin: (origin, callback) => {
+        // Allow requests with no origin (mobile apps, curl, Postman)
         if (!origin) return callback(null, true);
+        
+        // Check if origin is in explicit allowed list
         if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
             return callback(null, true);
         }
+        
+        // Allow any Vercel deployment preview domain
         if (origin.endsWith('.vercel.app') || origin.includes('localhost')) {
             return callback(null, true);
         }
+        
+        // Permissive fallback for development
         return callback(null, true);
     },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+    preflightContinue: false,
+    optionsSuccessStatus: 204
 };
 
+// Apply CORS
 app.use(cors(corsOptions));
 
-// Body parser
-app.use(
-    express.json({
-        limit: '5mb',
-    })
-);
+// Handle preflight requests
+app.options('*', cors(corsOptions));
 
-// Rate limiting
+// Body parser
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: true }));
+
+// Rate limiting - apply to /api routes
 app.use('/api', apiLimiter);
 
 // Health check endpoints
@@ -85,10 +92,10 @@ app.use('/api/reviews', reviewRoutes);
 app.use('/api/history', historyRoutes);
 app.use('/api/github', githubRoutes);
 
-// 404
+// 404 handler
 app.use(notFound);
 
-// Global error handler
+// Global error handler - MUST be last
 app.use(errorHandler);
 
 export default app;

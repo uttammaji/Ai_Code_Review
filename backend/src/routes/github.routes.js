@@ -1,33 +1,34 @@
 import express from 'express';
-import { protect } from '../middleware/auth.middleware.js';
-import {
-    githubAuth,
-    githubOAuthCallback,
-    connectGitHub,
-    getGitHubUser,
-    getGithubRepos,
-    disconnectGitHub,
-} from '../controllers/github.controller.js';
 
 const router = express.Router();
 
-console.log('✅ Setting up GitHub routes...');
-
-// OAuth routes
-router.get('/auth', githubAuth);
-router.get('/callback', githubOAuthCallback);
-
-// Protected routes
-router.post('/connect', protect, connectGitHub);
-router.get('/user', protect, getGitHubUser);
-router.get('/repos', protect, getGithubRepos);
-router.delete('/disconnect', protect, disconnectGitHub);
-
-// Test route
+// Simple test route - no dependencies
 router.get('/test', (req, res) => {
-    res.json({ success: true, message: 'GitHub routes are working!' });
+    res.json({ 
+        success: true, 
+        message: 'GitHub routes are working!',
+        timestamp: new Date().toISOString()
+    });
 });
 
-console.log('✅ GitHub routes setup complete');
+router.get('/auth', (req, res) => {
+    res.json({ success: true, message: 'Auth endpoint' });
+});
+
+router.post('/connect', (req, res) => {
+    res.json({ success: true, message: 'Connect endpoint' });
+});
+
+router.get('/user', (req, res) => {
+    res.json({ success: true, user: null });
+});
+
+router.get('/repos', (req, res) => {
+    res.json({ success: true, repositories: [] });
+});
+
+router.delete('/disconnect', (req, res) => {
+    res.json({ success: true, message: 'Disconnected' });
+});
 
 export default router;

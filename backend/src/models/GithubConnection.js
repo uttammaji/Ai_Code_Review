@@ -1,3 +1,4 @@
+// backend/src/models/GithubConnection.js
 import mongoose from 'mongoose';
 
 const githubConnectionSchema = new mongoose.Schema(
@@ -8,22 +9,23 @@ const githubConnectionSchema = new mongoose.Schema(
             required: true,
             unique: true,
         },
-
         githubId: {
             type: String,
             required: true,
+            unique: true, // Add this
         },
-
         username: {
             type: String,
             required: true,
         },
-
         accessToken: {
             type: String,
             required: true,
         },
-
+        email: {
+            type: String,
+            default: '',
+        },
         avatarUrl: {
             type: String,
             default: '',

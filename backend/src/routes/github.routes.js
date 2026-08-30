@@ -2,6 +2,7 @@
 import express from 'express';
 
 import {
+    githubAuth,  
     connectGitHub,
     githubOAuthCallback,
     getGitHubUser,
@@ -17,22 +18,10 @@ import { protect } from '../middleware/auth.middleware.js';
 
 const router = express.Router();
 
-router.get('/auth', (req, res) => {
-    const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
-    const GITHUB_REDIRECT_URI = process.env.GITHUB_REDIRECT_URI ;
-    
-    console.log('🔐 GitHub Auth - Redirect URI:', GITHUB_REDIRECT_URI);
-    
-    const githubAuthUrl = 
-        `https://github.com/login/oauth/authorize?` +
-        `client_id=${GITHUB_CLIENT_ID}&` +
-        `redirect_uri=${encodeURIComponent(GITHUB_REDIRECT_URI)}&` +
-        `scope=repo,user`;
+// ============ OAUTH ROUTES ============
 
-    console.log('🔗 GitHub Auth URL:', githubAuthUrl);
-    
-    res.redirect(githubAuthUrl);
-});
+// ✅ Initiate GitHub OAuth - Redirect to GitHub
+router.get('/auth', githubAuth);
 
 // GitHub OAuth callback
 router.get('/callback', githubOAuthCallback);
@@ -45,7 +34,7 @@ router.post('/connect', protect, connectGitHub);
 // Get GitHub user data
 router.get('/user', protect, getGitHubUser);
 
-// Get all repositories (two routes for flexibility)
+// Get all repositories
 router.get('/repos', protect, getGithubRepos);
 router.get('/repositories', protect, getGithubRepos);
 

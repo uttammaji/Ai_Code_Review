@@ -189,49 +189,106 @@ export const githubOAuthCallback = async (req, res) => {
     }
 };
 
+// backend/src/controllers/github.controller.js
+// Replace your connectGitHub function with this:
+
 export const connectGitHub = async (req, res) => {
     try {
+        console.log('========================================');
+        console.log('🔵 CONNECT GITHUB CALLED');
+        console.log('========================================');
+        console.log('📝 User ID:', req.user?._id);
+        console.log('📦 Request Body:', req.body);
+        
         const { githubId, username, email, avatar, name, accessToken } = req.body;
 
-        console.log('Connecting GitHub for user:', req.user._id);
-        console.log('GitHub username:', username);
-
-        if (!githubId || !username || !accessToken) {
-            return respondWithError(res, 400, 'Missing required GitHub data');
+        // Validate each field
+        if (!githubId) {
+            console.error('❌ Missing githubId');
+            return res.status(400).json({
+                success: false,
+                message: 'Missing githubId'
+            });
+        }
+        if (!username) {
+            console.error('❌ Missing username');
+            return res.status(400).json({
+                success: false,
+                message: 'Missing username'
+            });
+        }
+        if (!accessToken) {
+            console.error('❌ Missing accessToken');
+            return res.status(400).json({
+                success: false,
+                message: 'Missing accessToken'
+            });
         }
 
+        console.log('✅ Validation passed');
+        console.log('👤 GitHub Username:', username);
+        console.log('🆔 GitHub ID:', githubId);
+
+        // Check if connection exists
+        console.log('🔍 Checking for existing connection...');
         let connection = await GithubConnection.findOne({ user: req.user._id });
+        console.log('📊 Existing connection:', connection ? 'FOUND' : 'NOT FOUND');
 
         if (connection) {
+            console.log('🔄 Updating existing connection...');
             connection.githubId = String(githubId);
             connection.username = username;
-            connection.email = email || '';
-            connection.avatarUrl = avatar || '';
+            connection.email = email || connection.email || '';
+            connection.avatarUrl = avatar || connection.avatarUrl || '';
             connection.accessToken = accessToken;
             await connection.save();
-            console.log('Updated existing GitHub connection');
+            console.log('✅ Connection updated successfully');
         } else {
+            console.log('🆕 Creating new connection...');
             connection = new GithubConnection({
                 user: req.user._id,
                 githubId: String(githubId),
-                username: username,
+                username,
                 email: email || '',
                 avatarUrl: avatar || '',
-                accessToken: accessToken,
+                accessToken,
             });
             await connection.save();
-            console.log('Created new GitHub connection');
+            console.log('✅ New connection created successfully');
         }
 
-        console.log('GitHub connected successfully for user:', req.user._id);
-
-        return respondWithSuccess(res, {
+        console.log('✅ Returning success response');
+        return res.status(200).json({
+            success: true,
             message: 'GitHub connected successfully',
-            user: githubUserPayload(connection)
+            user: {
+                username: connection.username,
+                avatar: connection.avatarUrl,
+                connected: true,
+            }
         });
     } catch (error) {
-        console.error('Connect GitHub error:', error);
-        return respondWithError(res, 500, 'Failed to connect GitHub');
+        console.error('========================================');
+        console.error('❌ CONNECT GITHUB ERROR');
+        console.error('========================================');
+        console.error('Error Message:', error.message);
+        console.error('Error Stack:', error.stack);
+        console.error('Error Name:', error.name);
+        console.error('Error Code:', error.code);
+        console.error('========================================');
+        
+        // Check for specific MongoDB errors
+        if (error.code === 11000) {
+            return res.status(409).json({
+                success: false,
+                message: 'GitHub account already connected to another user'
+            });
+        }
+
+        return res.status(500).json({
+            success: false,
+            message: error.message || 'Failed to connect GitHub'
+        });
     }
 };
 

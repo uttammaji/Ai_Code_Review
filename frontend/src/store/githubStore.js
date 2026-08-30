@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { githubApi } from '../api/github.api';
+import { githubApi } from '../api/github';
 
 export const useGitHubStore = create((set, get) => ({
   connected: false,

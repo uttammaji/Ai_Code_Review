@@ -1,117 +1,52 @@
 import GithubConnection from '../models/GithubConnection.js';
 
-console.log('✅ Loading GitHub controller...');
-
-export const githubAuth = (req, res) => {
-    try {
-        const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
-        const GITHUB_REDIRECT_URI = process.env.GITHUB_REDIRECT_URI || 'https://ai-code-review-1-09kf.onrender.com/api/github/callback';
-        
-        if (!GITHUB_CLIENT_ID) {
-            console.error('❌ GITHUB_CLIENT_ID not configured');
-            return res.status(500).json({
-                success: false,
-                message: 'GitHub OAuth is not configured'
-            });
-        }
-
-        const githubAuthUrl = 
-            'https://github.com/login/oauth/authorize?' +
-            'client_id=' + GITHUB_CLIENT_ID +
-            '&redirect_uri=' + encodeURIComponent(GITHUB_REDIRECT_URI) +
-            '&scope=read:user,repo' +
-            '&allow_signup=true';
-
-        console.log('🔗 GitHub Auth URL:', githubAuthUrl);
-        res.redirect(githubAuthUrl);
-    } catch (error) {
-        console.error('GitHub auth error:', error);
-        res.status(500).json({ success: false, message: 'Failed to initiate GitHub auth' });
-    }
-};
-
-export const githubOAuthCallback = async (req, res) => {
-    const { code } = req.query;
-    const CLIENT_URL = process.env.CLIENT_URL || 'https://ai-code-review-u.vercel.app';
-    
-    console.log('🔄 GitHub Callback received, code:', code ? 'present' : 'missing');
-
-    if (!code) {
-        return res.redirect(CLIENT_URL + '/github/error?message=No code provided');
-    }
-
-    try {
-        const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
-        const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
-        const GITHUB_REDIRECT_URI = process.env.GITHUB_REDIRECT_URI || 'https://ai-code-review-1-09kf.onrender.com/api/github/callback';
-
-        const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Accept': 'application/json',
-            },
-            body: JSON.stringify({
-                client_id: GITHUB_CLIENT_ID,
-                client_secret: GITHUB_CLIENT_SECRET,
-                code,
-                redirect_uri: GITHUB_REDIRECT_URI,
-            }),
-        });
-
-        const tokenData = await tokenResponse.json();
-        console.log('🔑 Token Response:', tokenData);
-
-        const accessToken = tokenData.access_token;
-        if (!accessToken) {
-            throw new Error('No access token received');
-        }
-
-        // Get GitHub user
-        const userRes = await fetch('https://api.github.com/user', {
-            headers: { Authorization: 'Bearer ' + accessToken },
-        });
-        const githubUser = await userRes.json();
-
-        // Get email
-        const emailRes = await fetch('https://api.github.com/user/emails', {
-            headers: { Authorization: 'Bearer ' + accessToken },
-        });
-        const emails = await emailRes.json();
-        const primaryEmail = emails.find(e => e.primary)?.email || emails[0]?.email || '';
-
-        const redirectUrl = 
-            CLIENT_URL + '/github/callback?' +
-            'githubId=' + githubUser.id +
-            '&username=' + githubUser.login +
-            '&email=' + encodeURIComponent(primaryEmail) +
-            '&avatar=' + encodeURIComponent(githubUser.avatar_url) +
-            '&name=' + encodeURIComponent(githubUser.name || githubUser.login) +
-            '&token=' + encodeURIComponent(accessToken);
-
-        console.log('🔄 Redirecting to:', redirectUrl);
-        res.redirect(redirectUrl);
-    } catch (error) {
-        console.error('❌ GitHub OAuth error:', error.message);
-        res.redirect(CLIENT_URL + '/github/error?message=Authentication failed');
-    }
-};
-
 export const connectGitHub = async (req, res) => {
     try {
         console.log('🔵 CONNECT GITHUB CALLED');
         console.log('📦 Body:', req.body);
+        console.log('📦 Body type:', typeof req.body);
         console.log('👤 User:', req.user?._id);
 
-        const { githubId, username, email, avatar, name, accessToken } = req.body;
-
-        if (!githubId || !username || !accessToken) {
+        // Check if body exists
+        if (!req.body || Object.keys(req.body).length === 0) {
+            console.error('❌ Request body is empty');
             return res.status(400).json({
                 success: false,
-                message: 'Missing required fields'
+                message: 'Request body is empty. Please send data with Content-Type: application/json'
             });
         }
 
+        const { githubId, username, email, avatar, name, accessToken } = req.body;
+
+        // Validate required fields
+        const missingFields = [];
+        if (!githubId) missingFields.push('githubId');
+        if (!username) missingFields.push('username');
+        if (!accessToken) missingFields.push('accessToken');
+
+        if (missingFields.length > 0) {
+            console.error('❌ Missing fields:', missingFields);
+            return res.status(400).json({
+                success: false,
+                message: 'Missing required fields: ' + missingFields.join(', '),
+                received: Object.keys(req.body)
+            });
+        }
+
+        // Check if user is authenticated
+        if (!req.user || !req.user._id) {
+            console.error('❌ User not authenticated');
+            return res.status(401).json({
+                success: false,
+                message: 'User not authenticated'
+            });
+        }
+
+        console.log('✅ All validations passed');
+        console.log('👤 GitHub Username:', username);
+        console.log('👤 User ID:', req.user._id);
+
+        // Save to database
         let connection = await GithubConnection.findOne({ user: req.user._id });
 
         if (connection) {
@@ -146,6 +81,7 @@ export const connectGitHub = async (req, res) => {
         });
     } catch (error) {
         console.error('❌ Connect error:', error.message);
+        console.error('Stack:', error.stack);
         return res.status(500).json({
             success: false,
             message: error.message || 'Failed to connect GitHub'
@@ -167,6 +103,7 @@ export const getGitHubUser = async (req, res) => {
             }
         });
     } catch (error) {
+        console.error('Get GitHub user error:', error);
         return res.status(500).json({ success: false, message: 'Failed to fetch GitHub status' });
     }
 };
@@ -207,6 +144,7 @@ export const getGithubRepos = async (req, res) => {
             }))
         });
     } catch (error) {
+        console.error('Get repos error:', error);
         return res.status(500).json({ success: false, message: 'Failed to fetch repositories' });
     }
 };
@@ -216,6 +154,7 @@ export const disconnectGitHub = async (req, res) => {
         await GithubConnection.deleteOne({ user: req.user._id });
         return res.status(200).json({ success: true, message: 'GitHub disconnected' });
     } catch (error) {
+        console.error('Disconnect error:', error);
         return res.status(500).json({ success: false, message: 'Failed to disconnect' });
     }
 };

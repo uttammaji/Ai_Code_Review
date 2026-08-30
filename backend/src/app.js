@@ -1,4 +1,3 @@
-// backend/src/app.js
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
@@ -13,16 +12,18 @@ import githubRoutes from './routes/github.routes.js';
 import { notFound, errorHandler } from './middleware/error.middleware.js';
 import { apiLimiter } from './middleware/rateLimit.middleware.js';
 
-
-
 const app = express();
-app.use(express.json({ limit: '5mb' }));
+
+// ✅ BODY PARSER - MUST BE FIRST AND BEFORE ANY ROUTES
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
 app.set('trust proxy', 1);
 
 // Security headers
 app.use(helmet({
     crossOriginResourcePolicy: { policy: "cross-origin" },
-    contentSecurityPolicy: false // Disable CSP for API
+    contentSecurityPolicy: false
 }));
 
 // Logging
@@ -35,20 +36,13 @@ const allowedOrigins = (process.env.CLIENT_URL || 'http://localhost:5173')
 
 const corsOptions = {
     origin: (origin, callback) => {
-        // Allow requests with no origin (mobile apps, curl, Postman)
         if (!origin) return callback(null, true);
-        
-        // Check if origin is in explicit allowed list
         if (allowedOrigins.includes(origin) || allowedOrigins.includes('*')) {
             return callback(null, true);
         }
-        
-        // Allow any Vercel deployment preview domain
         if (origin.endsWith('.vercel.app') || origin.includes('localhost')) {
             return callback(null, true);
         }
-        
-        // Permissive fallback for development
         return callback(null, true);
     },
     credentials: true,
@@ -58,10 +52,9 @@ const corsOptions = {
     optionsSuccessStatus: 204
 };
 
-// Apply CORS middleware
 app.use(cors(corsOptions));
 
-// Handle OPTIONS requests (preflight)
+// Handle OPTIONS requests
 app.use((req, res, next) => {
     if (req.method === 'OPTIONS') {
         res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH, OPTIONS');
@@ -71,10 +64,6 @@ app.use((req, res, next) => {
     }
     next();
 });
-
-// Body parser
-
-app.use(express.urlencoded({ extended: true }));
 
 // Rate limiting
 app.use('/api', apiLimiter);
@@ -97,7 +86,7 @@ app.get('/api/health', (_req, res) => {
     });
 });
 
-// API routes
+// ✅ API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/review', reviewRoutes);
@@ -108,7 +97,7 @@ app.use('/api/github', githubRoutes);
 // 404 handler
 app.use(notFound);
 
-// Global error handler - MUST be last
+// Global error handler
 app.use(errorHandler);
 
 export default app;

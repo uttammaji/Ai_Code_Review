@@ -14,29 +14,37 @@ import {
 } from '../services/github.service.js';
 import { buildReviewResponse } from '../utils/transformers.js';
 
-// Configuration with fallbacks
 const JWT_SECRET = process.env.JWT_SECRET || 'development-secret';
-const GITHUB_REDIRECT_URI = process.env.GITHUB_REDIRECT_URI || 'https://ai-code-review-3-tvbq.onrender.com/api/github/callback';
+const GITHUB_REDIRECT_URI = process.env.GITHUB_REDIRECT_URI || 'http://localhost:5000/api/github/callback';
 const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000';
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
 
-// Supported code file extensions
 const CODE_EXTENSIONS = ['.js', '.ts', '.jsx', '.tsx', '.py', '.go', '.java', '.c', '.cpp', '.cs', '.rs', '.rb', '.php', '.swift', '.kt'];
 const MAX_FILE_SIZE = 50000;
 const MAX_FILES_PER_REVIEW = 10;
 const CHUNK_SIZE = 5;
 
-// Language mapping
 const LANGUAGE_MAP = {
-    js: 'javascript', ts: 'typescript', jsx: 'javascript', tsx: 'typescript',
-    py: 'python', go: 'go', java: 'java', c: 'c', cpp: 'cpp',
-    cs: 'csharp', rs: 'rust', rb: 'ruby', php: 'php', swift: 'swift', kt: 'kotlin'
+    js: 'javascript',
+    ts: 'typescript',
+    jsx: 'javascript',
+    tsx: 'typescript',
+    py: 'python',
+    go: 'go',
+    java: 'java',
+    c: 'c',
+    cpp: 'cpp',
+    cs: 'csharp',
+    rs: 'rust',
+    rb: 'ruby',
+    php: 'php',
+    swift: 'swift',
+    kt: 'kotlin'
 };
 
-// Helper Functions
 const respondWithError = (res, status, message) => {
-    return res.status(status).json({ success: false, message });
+    return res.status(status).json({ success: false, message: message });
 };
 
 const respondWithSuccess = (res, data, status = 200) => {
@@ -76,9 +84,6 @@ const detectLanguage = (files) => {
     return LANGUAGE_MAP[mostCommonExt.replace('.', '')] || 'javascript';
 };
 
-// ============ OAUTH CONTROLLERS ============
-
-// ✅ Initiate GitHub OAuth - Redirect to GitHub
 export const githubAuth = (req, res) => {
     try {
         if (!GITHUB_CLIENT_ID) {
@@ -89,18 +94,17 @@ export const githubAuth = (req, res) => {
             });
         }
 
-        console.log('🔐 GitHub Auth - Redirect URI:', GITHUB_REDIRECT_URI);
+        console.log('GitHub Auth - Redirect URI:', GITHUB_REDIRECT_URI);
         
         const githubAuthUrl = 
-            `https://github.com/login/oauth/authorize?` +
-            `client_id=${GITHUB_CLIENT_ID}&` +
-            `redirect_uri=${encodeURIComponent(GITHUB_REDIRECT_URI)}&` +
-            `scope=read:user,repo&` +
-            `allow_signup=true`;
+            'https://github.com/login/oauth/authorize?' +
+            'client_id=' + GITHUB_CLIENT_ID +
+            '&redirect_uri=' + encodeURIComponent(GITHUB_REDIRECT_URI) +
+            '&scope=read:user,repo' +
+            '&allow_signup=true';
 
-        console.log('🔗 GitHub Auth URL:', githubAuthUrl);
+        console.log('GitHub Auth URL:', githubAuthUrl);
         
-        // Redirect to GitHub for authorization
         res.redirect(githubAuthUrl);
     } catch (error) {
         console.error('Error initiating GitHub auth:', error);
@@ -111,14 +115,12 @@ export const githubAuth = (req, res) => {
     }
 };
 
-// ✅ GitHub OAuth Callback
 export const githubOAuthCallback = async (req, res) => {
     const { code, error: githubError, error_description } = req.query;
 
     console.log('GitHub Callback received');
     console.log('Code:', code ? 'present' : 'missing');
 
-    // Handle GitHub OAuth errors
     if (githubError) {
         console.error('GitHub OAuth error:', githubError, error_description);
         return redirectToClient(res, 'failed', error_description || 'Authorization denied');
@@ -129,7 +131,6 @@ export const githubOAuthCallback = async (req, res) => {
     }
 
     try {
-        // Exchange code for access token
         const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
             method: 'POST',
             headers: {
@@ -139,7 +140,7 @@ export const githubOAuthCallback = async (req, res) => {
             body: JSON.stringify({
                 client_id: GITHUB_CLIENT_ID,
                 client_secret: GITHUB_CLIENT_SECRET,
-                code,
+                code: code,
                 redirect_uri: GITHUB_REDIRECT_URI,
             }),
         });
@@ -153,48 +154,41 @@ export const githubOAuthCallback = async (req, res) => {
             throw new Error('No access token received');
         }
 
-        // Get GitHub user info
         const userResponse = await fetch('https://api.github.com/user', {
             headers: {
-                Authorization: `Bearer ${accessToken}`,
+                Authorization: 'Bearer ' + accessToken,
             },
         });
 
         const githubUser = await userResponse.json();
-        console.log('👤 GitHub User:', githubUser.login);
+        console.log('GitHub User:', githubUser.login);
 
-        // Get user's primary email
         const emailResponse = await fetch('https://api.github.com/user/emails', {
             headers: {
-                Authorization: `Bearer ${accessToken}`,
+                Authorization: 'Bearer ' + accessToken,
             },
         });
 
         const emails = await emailResponse.json();
         const primaryEmail = emails.find(email => email.primary)?.email || emails[0]?.email;
 
-        // Since we don't have a userId from JWT state, we'll redirect to frontend with data
-        // The frontend will then call /github/connect with the data and the user's JWT token
-        const redirectUrl = `${CLIENT_URL}/github/callback?` +
-            `githubId=${githubUser.id}&` +
-            `username=${githubUser.login}&` +
-            `email=${primaryEmail}&` +
-            `avatar=${encodeURIComponent(githubUser.avatar_url)}&` +
-            `name=${encodeURIComponent(githubUser.name || githubUser.login)}&` +
-            `token=${encodeURIComponent(accessToken)}`;
+        const redirectUrl = CLIENT_URL + '/github/callback?' +
+            'githubId=' + githubUser.id +
+            '&username=' + githubUser.login +
+            '&email=' + (primaryEmail || '') +
+            '&avatar=' + encodeURIComponent(githubUser.avatar_url) +
+            '&name=' + encodeURIComponent(githubUser.name || githubUser.login) +
+            '&token=' + encodeURIComponent(accessToken);
 
         console.log('Redirecting to frontend:', redirectUrl);
 
         res.redirect(redirectUrl);
     } catch (error) {
         console.error('GitHub OAuth error:', error.message);
-        res.redirect(`${CLIENT_URL}/github/error?message=Authentication failed`);
+        res.redirect(CLIENT_URL + '/github/error?message=Authentication failed');
     }
 };
 
-// ============ PROTECTED CONTROLLERS ============
-
-// Connect GitHub account (save to database)
 export const connectGitHub = async (req, res) => {
     try {
         const { githubId, username, email, avatar, name, accessToken } = req.body;
@@ -206,26 +200,30 @@ export const connectGitHub = async (req, res) => {
             return respondWithError(res, 400, 'Missing required GitHub data');
         }
 
-        // Save or update connection
-        const connection = await GithubConnection.findOneAndUpdate(
-            { user: req.user._id },
-            {
+        let connection = await GithubConnection.findOne({ user: req.user._id });
+
+        if (connection) {
+            connection.githubId = String(githubId);
+            connection.username = username;
+            connection.email = email || '';
+            connection.avatarUrl = avatar || '';
+            connection.accessToken = accessToken;
+            await connection.save();
+            console.log('Updated existing GitHub connection');
+        } else {
+            connection = new GithubConnection({
+                user: req.user._id,
                 githubId: String(githubId),
-                username,
+                username: username,
                 email: email || '',
                 avatarUrl: avatar || '',
-                accessToken,
-                updatedAt: new Date(),
-            },
-            { 
-                new: true, 
-                upsert: true, 
-                runValidators: true, 
-                setDefaultsOnInsert: true 
-            }
-        );
+                accessToken: accessToken,
+            });
+            await connection.save();
+            console.log('Created new GitHub connection');
+        }
 
-        console.log(`GitHub connected successfully for user: ${req.user._id}`);
+        console.log('GitHub connected successfully for user:', req.user._id);
 
         return respondWithSuccess(res, {
             message: 'GitHub connected successfully',
@@ -237,7 +235,6 @@ export const connectGitHub = async (req, res) => {
     }
 };
 
-// Get GitHub user data
 export const getGitHubUser = async (req, res) => {
     try {
         const connection = await GithubConnection.findOne({ user: req.user._id });
@@ -259,18 +256,13 @@ export const getGitHubUser = async (req, res) => {
     }
 };
 
-// Get GitHub repositories
 export const getGithubRepos = async (req, res) => {
     try {
         const connection = await getGitHubConnection(req.user._id);
         
         const response = await fetch('https://api.github.com/user/repos', {
             headers: {
-                Authorization: `Bearer ${connection.accessToken}`,
-            },
-            params: {
-                sort: 'updated',
-                per_page: 100,
+                Authorization: 'Bearer ' + connection.accessToken,
             },
         });
 
@@ -305,7 +297,6 @@ export const getGithubRepos = async (req, res) => {
     }
 };
 
-// Get branches
 export const getBranches = async (req, res) => {
     try {
         const { owner, repo } = req.params;
@@ -315,9 +306,9 @@ export const getBranches = async (req, res) => {
 
         const connection = await getGitHubConnection(req.user._id);
         
-        const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/branches`, {
+        const response = await fetch('https://api.github.com/repos/' + owner + '/' + repo + '/branches', {
             headers: {
-                Authorization: `Bearer ${connection.accessToken}`,
+                Authorization: 'Bearer ' + connection.accessToken,
             },
         });
 
@@ -340,7 +331,6 @@ export const getBranches = async (req, res) => {
     }
 };
 
-// Get repository tree
 export const getRepositoryFiles = async (req, res) => {
     try {
         const { owner, repo } = req.params;
@@ -352,9 +342,9 @@ export const getRepositoryFiles = async (req, res) => {
 
         const connection = await getGitHubConnection(req.user._id);
         
-        const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`, {
+        const response = await fetch('https://api.github.com/repos/' + owner + '/' + repo + '/git/trees/' + branch + '?recursive=1', {
             headers: {
-                Authorization: `Bearer ${connection.accessToken}`,
+                Authorization: 'Bearer ' + connection.accessToken,
             },
         });
 
@@ -374,7 +364,7 @@ export const getRepositoryFiles = async (req, res) => {
             }));
 
         return respondWithSuccess(res, { 
-            files, 
+            files: files, 
             truncated: files.length === 1000 
         });
     } catch (error) {
@@ -383,7 +373,6 @@ export const getRepositoryFiles = async (req, res) => {
     }
 };
 
-// Get repository file content
 export const getRepositoryFile = async (req, res) => {
     try {
         const { owner, repo } = req.params;
@@ -393,11 +382,15 @@ export const getRepositoryFile = async (req, res) => {
             return respondWithError(res, 400, 'A valid file path is required');
         }
 
+        if (!owner || !repo) {
+            return respondWithError(res, 400, 'Owner and repository name are required');
+        }
+
         const connection = await getGitHubConnection(req.user._id);
         
-        const response = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${path}?ref=${branch}`, {
+        const response = await fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + path + '?ref=' + branch, {
             headers: {
-                Authorization: `Bearer ${connection.accessToken}`,
+                Authorization: 'Bearer ' + connection.accessToken,
             },
         });
 
@@ -412,14 +405,14 @@ export const getRepositoryFile = async (req, res) => {
         }
 
         if (file.size > MAX_FILE_SIZE) {
-            return respondWithError(res, 413, `File size exceeds ${MAX_FILE_SIZE / 1000}KB limit for AI review`);
+            return respondWithError(res, 413, 'File size exceeds ' + (MAX_FILE_SIZE / 1000) + 'KB limit for AI review');
         }
 
         const content = Buffer.from(file.content, 'base64').toString('utf8');
         
         return respondWithSuccess(res, {
             path: file.path,
-            content,
+            content: content,
             size: file.size,
             encoding: file.encoding
         });
@@ -429,7 +422,6 @@ export const getRepositoryFile = async (req, res) => {
     }
 };
 
-// Disconnect GitHub
 export const disconnectGitHub = async (req, res) => {
     try {
         const result = await GithubConnection.deleteOne({ user: req.user._id });
@@ -445,7 +437,6 @@ export const disconnectGitHub = async (req, res) => {
     }
 };
 
-// Review repository
 export const reviewRepository = async (req, res) => {
     try {
         const { owner, repo, branch, files: selectedFiles } = req.body;
@@ -457,17 +448,15 @@ export const reviewRepository = async (req, res) => {
         const connection = await getGitHubConnection(req.user._id);
         const accessToken = connection.accessToken;
 
-        // Get repository tree
-        const treeResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/git/trees/${branch || 'main'}?recursive=1`, {
+        const treeResp = await fetch('https://api.github.com/repos/' + owner + '/' + repo + '/git/trees/' + (branch || 'main') + '?recursive=1', {
             headers: {
-                Authorization: `Bearer ${accessToken}`,
+                Authorization: 'Bearer ' + accessToken,
             },
         });
 
         const treeData = await treeResp.json();
         const tree = treeData.tree || [];
 
-        // Filter and select code files
         let codeFiles = tree.filter((item) => 
             item.type === 'blob' && 
             CODE_EXTENSIONS.some((ext) => item.path.endsWith(ext)) &&
@@ -482,26 +471,24 @@ export const reviewRepository = async (req, res) => {
             return respondWithError(res, 404, 'No reviewable code files found in the repository');
         }
 
-        // Limit files for review
         const filesToReview = codeFiles.slice(0, MAX_FILES_PER_REVIEW);
 
-        // Fetch file contents
         const fileContents = [];
         for (const file of filesToReview) {
             try {
-                const fileResp = await fetch(`https://api.github.com/repos/${owner}/${repo}/contents/${file.path}?ref=${branch || 'main'}`, {
+                const fileResp = await fetch('https://api.github.com/repos/' + owner + '/' + repo + '/contents/' + file.path + '?ref=' + (branch || 'main'), {
                     headers: {
-                        Authorization: `Bearer ${accessToken}`,
+                        Authorization: 'Bearer ' + accessToken,
                     },
                 });
 
                 const fileData = await fileResp.json();
                 if (fileData.content) {
                     const content = Buffer.from(fileData.content, 'base64').toString('utf8');
-                    fileContents.push({ path: file.path, content });
+                    fileContents.push({ path: file.path, content: content });
                 }
             } catch (err) {
-                console.warn(`Failed to fetch file: ${file.path}`, err.message);
+                console.warn('Failed to fetch file:', file.path, err.message);
             }
         }
 
@@ -509,16 +496,13 @@ export const reviewRepository = async (req, res) => {
             return respondWithError(res, 502, 'Failed to fetch any repository files');
         }
 
-        // Detect language
         const language = detectLanguage(fileContents);
 
-        // Chunk files for AI review
         const chunks = [];
         for (let i = 0; i < fileContents.length; i += CHUNK_SIZE) {
             chunks.push(fileContents.slice(i, i + CHUNK_SIZE));
         }
 
-        // Perform AI review on chunks
         const aggregated = {
             scoreSum: 0,
             scoreCount: 0,
@@ -533,7 +517,7 @@ export const reviewRepository = async (req, res) => {
         };
 
         for (const chunk of chunks) {
-            const chunkCombined = chunk.map((f) => `// FILE: ${f.path}\n${f.content}`).join('\n\n');
+            const chunkCombined = chunk.map((f) => '// FILE: ' + f.path + '\n' + f.content).join('\n\n');
             try {
                 const chunkResult = await reviewCode(chunkCombined, language);
                 
@@ -572,7 +556,6 @@ export const reviewRepository = async (req, res) => {
             }
         }
 
-        // Calculate final scores
         const finalScore = aggregated.scoreCount > 0 
             ? Math.round(aggregated.scoreSum / aggregated.scoreCount) 
             : 0;
@@ -586,12 +569,11 @@ export const reviewRepository = async (req, res) => {
 
         const finalImprovedCode = aggregated.improvedCodeParts.join('\n\n// ---- CHUNK BREAK ----\n\n');
 
-        // Save review to database
         const reviewDoc = await CodeReview.create({
             user: req.user._id,
             project: null,
-            language,
-            code: fileContents.slice(0, 20).map((f) => `// FILE: ${f.path}\n${f.content}`).join('\n\n'),
+            language: language,
+            code: fileContents.slice(0, 20).map((f) => '// FILE: ' + f.path + '\n' + f.content).join('\n\n'),
             score: finalScore,
             categories: {
                 security: finalCategories.security || 0,
@@ -609,7 +591,6 @@ export const reviewRepository = async (req, res) => {
             improvedCode: finalImprovedCode || '',
         });
 
-        // Create history entry
         try {
             await ReviewHistory.create({
                 user: req.user._id,

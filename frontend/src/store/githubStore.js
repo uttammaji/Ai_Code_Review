@@ -1,4 +1,3 @@
-// frontend/src/store/githubStore.js
 import { create } from 'zustand';
 import { githubApi } from '../api/github.js';
 

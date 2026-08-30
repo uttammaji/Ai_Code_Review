@@ -16,6 +16,7 @@ import { apiLimiter } from './middleware/rateLimit.middleware.js';
 
 
 const app = express();
+app.use(express.json({ limit: '5mb' }));
 app.set('trust proxy', 1);
 
 // Security headers
@@ -72,7 +73,7 @@ app.use((req, res, next) => {
 });
 
 // Body parser
-app.use(express.json({ limit: '5mb' }));
+
 app.use(express.urlencoded({ extended: true }));
 
 // Rate limiting

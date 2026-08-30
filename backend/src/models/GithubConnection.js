@@ -1,44 +1,36 @@
-// backend/src/models/GithubConnection.js
 import mongoose from 'mongoose';
 
-const githubConnectionSchema = new mongoose.Schema(
-    {
-        user: {
-            type: mongoose.Schema.Types.ObjectId,
-            ref: 'User',
-            required: true,
-            unique: true,
-        },
-        githubId: {
-            type: String,
-            required: true,
-            unique: true, // Add this
-        },
-        username: {
-            type: String,
-            required: true,
-        },
-        accessToken: {
-            type: String,
-            required: true,
-        },
-        email: {
-            type: String,
-            default: '',
-        },
-        avatarUrl: {
-            type: String,
-            default: '',
-        },
+const githubConnectionSchema = new mongoose.Schema({
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+        unique: true,
     },
-    {
-        timestamps: true,
-    }
-);
+    githubId: {
+        type: String,
+        required: true,
+    },
+    username: {
+        type: String,
+        required: true,
+    },
+    accessToken: {
+        type: String,
+        required: true,
+    },
+    email: {
+        type: String,
+        default: '',
+    },
+    avatarUrl: {
+        type: String,
+        default: '',
+    },
+}, {
+    timestamps: true,
+});
 
-const GithubConnection = mongoose.models.GithubConnection || mongoose.model(
-    'GithubConnection',
-    githubConnectionSchema
-);
+const GithubConnection = mongoose.models.GithubConnection || mongoose.model('GithubConnection', githubConnectionSchema);
 
 export default GithubConnection;
